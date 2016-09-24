@@ -1,0 +1,41 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id: Portfile 152740 2016-09-15 21:43:07Z mps@macports.org $
+
+PortSystem 1.0
+PortGroup           github 1.0
+PortGroup           cxx11 1.0
+
+github.setup        aria2 aria2 1.26.1 release-
+github.tarball_from releases
+categories          net
+platforms           darwin
+maintainers         mww
+license             {GPL-2+ OpenSSLException}
+description         download utility with resuming and segmented downloading
+long_description    aria2 is a download utility with resuming and segmented \
+                    downloading. Supported protocols are HTTP/HTTPS/FTP/BitTorrent.
+                    
+use_xz              yes
+
+checksums           rmd160  fef4bb96876b13e0e959c12a981240766cd75aa2 \
+                    sha256  f4e64e9754af5e1c0ee1ee2a50c5fa5acbc180855909209c2ce0111e86c9a801
+
+depends_build       port:pkgconfig
+depends_lib         port:gettext port:libiconv port:gnutls port:libxml2
+
+# use_* must be defined after depends_*, otherwise the automatic dependencies
+# will be overwritten.
+# Alternatively, depends_*-append could be used.
+use_autoreconf      yes
+
+configure.cxxflags-append -I${prefix}/include/libxml2
+configure.ldflags-append  -lintl
+configure.args      --with-gnutls --with-libgnutls-prefix=${prefix} \
+                    --with-libiconv-prefix=${prefix} \
+                    --with-libintl-prefix=${prefix} \
+                    --with-xml-prefix=${prefix} \
+                    --without-sqlite3
+
+platform darwin 10 {
+    configure.args-append "--without-appletls"
+}
