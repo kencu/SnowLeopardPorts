@@ -1,5 +1,3 @@
-qt4-mac 597
-variants {odbc raster demos examples debug openvg cxx11 universal} depends_build {port:pkgconfig port:clang-3.7} portdir aqua/qt4-mac description {Qt Tool Kit} homepage http://www.qt.io/ epoch 0 platforms macosx name qt4-mac depends_lib {port:zlib path:bin/dbus-daemon:dbus path:lib/libssl.dylib:openssl port:tiff port:libpng port:libmng port:jpeg} maintainers {michaelld openmaintainer} license {{LGPL-2.1 GPL-3}} long_description {Qt Tool Kit: A cross-platform framework (headers, data, and libraries) for writing cross-platform GUI-based applications.} categories aqua version 4.8.7 revision 4
 libsdl2 519
 variants {x11 universal} depends_build port:clang-3.7 portdir devel/libsdl2 description {Cross-platform multi-media development API} homepage http://www.libsdl.org/ epoch 0 platforms {macosx freebsd} name libsdl2 long_description {Simple DirectMedia Layer is a cross-platform development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.} maintainers {jmr openmaintainer} license zlib categories {devel multimedia} version 2.0.4 revision 0
 aria2 595
