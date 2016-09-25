@@ -18,7 +18,7 @@ Here are some instructions from the macports website <https://guide.macports.org
 
 You might wonder why there are not very many ports in SnowLeopardPorts -- and that is because in general, almost all of the 20,000 ports on MacPorts "just work" and don't need to be replaced with older versions or modified to work on Snow Leopard. You will be surprised, I think how many current versions of software compile and run very nicely on Snow Leopard just "out of the box". 
 
-Some examples of what is in TigerPorts:
+Some examples of what is in SnowLeopardPorts:
 
 ```
 aria2 --> high-speed downloader, modified to work on Snow Leopard
