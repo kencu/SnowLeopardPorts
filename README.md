@@ -12,7 +12,7 @@ Finally, you need to add the local repository to your macports sources file (usu
 file:///opt/SnowLeopardPorts
 rsync://rsync.macports.org/release/tarballs/ports.tar [default]
 ```
-Then, when you look for ports, macports will find the SnowLeopardPorts portfiles before the official MacPorts portfiles. That's how this process works. Other port searches and requests will pass through tigerports and use the full untouched MacPorts repository.
+Then, when you look for ports, macports will find the SnowLeopardPorts portfiles before the official MacPorts portfiles. That's how this process works. Other port searches and requests will pass through SnowLeopardPorts and use the full untouched MacPorts repository. If you find failures, report them at macports, and perhaps there are workarounds available. If not, then we might pull in an older version of the port and add it here.
 
 Here are some instructions from the macports website <https://guide.macports.org/chunked/development.local-repositories.html>. The only thing I'd update in these instructions is to use `/opt/SnowLeopardPorts` due to permissions issues, but you can use other locations as well if you need to (like `/Users/Shared/SnowLeopardPorts`, for example).
 
