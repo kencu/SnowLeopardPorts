@@ -40,13 +40,6 @@ depends_lib         port:gtk2 \
 patchfiles          patch-include-order.diff \
                     patch-sysinfo-plugin-on-10.9-and-lower.diff 
 
-# fix test
-platform darwin {
-    post-patch {
-        reinplace "s|MAC_OS_X_VERSION_MIN_REQUIRED|MAC_OS_X_VERSION_MAX_AVAILABLE|g" ${worksrcpath}/plugins/sysinfo/osx/backend.m
-    }
-}
-
 # reconfigure for intltool 0.51 compatibility
 use_autoreconf      yes
 autoreconf.cmd      ./autogen.sh
