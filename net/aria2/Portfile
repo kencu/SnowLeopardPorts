@@ -16,7 +16,6 @@ long_description    aria2 is a download utility with resuming and segmented \
                     downloading. Supported protocols are HTTP/HTTPS/FTP/BitTorrent.
                     
 use_xz              yes
-
 checksums           rmd160  2f24d49032cc4453b7695c0c99997553b28bffa9 \
                     sha256  e0a125a557b9aacf23468374f63215e9b1d6165c990bd8ecb0603cdc1d5d72f0
 
