@@ -21,7 +21,6 @@ You might wonder why there are not very many ports in SnowLeopardPorts -- and th
 Some examples of what is in SnowLeopardPorts:
 
 ```
-aria2 --> high-speed downloader, modified to work on Snow Leopard
 glfw @3.12 --> last version that compiles and runs on Snow Leopard
 ```
 If you have any contributions to make to this collection, please feel free to add, suggest, or put in a pull request!
