@@ -1,0 +1,45 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# this software is not avaialable in source form from the authours as of 20161207
+# the binary is available for PPC, i386, and x86_64, so we'll have to use that
+# it is linked to libstdc++; there is nothing we can do about that at present
+
+PortSystem              1.0
+
+name                    macvim
+version                 7.3.531_Snapshot_64_for_10.6
+categories              editors
+license                 Vim GPL-2+
+platforms               darwin
+
+maintainers             nomaintainer
+description             MacVim is a GUI version of vim for Mac OS X
+long_description \
+                        MacVim is a port of the text editor Vim to Mac OS X that is meant to look \
+                        better and integrate more seamlessly with the Mac than vim-app. As the \
+                        current version of MacVim will not build or run on 10.6, this port installs \
+                        the last working version of a pre-built binary.
+
+distfiles               MacVim-snapshot-64-OSX-10_6.tbz
+homepage                https://macvim-dev.github.io/macvim/
+master_sites            https://cloud.github.com/downloads/alexlovelltroy/macvim/
+checksums               sha256  b478b26e3983e7fa73ad540c5361895432917535e9136d907ae68a06bcb26614 \
+                        rmd160  829cd52653a255a4e82b31a8a82ba57efef58c0b
+                        
+use_bzip2               yes
+
+set worksrcdir          MacVim-snapshot-64-OSX-10_6
+set sourcedir           ${worksrcpath}
+
+post-extract {
+    # add macports applications directory to mvim search path
+    reinplace "s|/Applications/Utilities/vim|/Applications/Utilities/vim ${applications_dir}|g" ${worksrcpath}/mvim
+}
+
+# we are just installing binaries, there is no configure or build phase in this port
+use_configure           no
+build {}
+
+destroot {
+    copy ${sourcedir}/MacVim.app ${destroot}${applications_dir}/
+    copy ${sourcedir}/mvim ${destroot}${prefix}/bin/
+}
