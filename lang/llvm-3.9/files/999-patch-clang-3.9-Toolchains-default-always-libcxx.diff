@@ -1,0 +1,11 @@
+--- ./tools/Clang/lib/Driver/ToolChains.cpp.orig	2016-12-21 00:45:00.000000000 -0800
++++ ./tools/Clang/lib/Driver/ToolChains.cpp	2016-12-21 00:45:42.000000000 -0800
+@@ -73,7 +73,7 @@
+        isTargetWatchOSBased())
+     return ToolChain::CST_Libcxx;
+ 
+-  return ToolChain::CST_Libstdcxx;
++  return ToolChain::CST_Libcxx;
+ }
+ 
+ /// Darwin provides an ARC runtime starting in MacOS X 10.7 and iOS 5.0.

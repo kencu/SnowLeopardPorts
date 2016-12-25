@@ -1,0 +1,13 @@
+--- ./tools/clang/lib/Driver/ToolChains.cpp.orig	2016-12-21 21:55:05.000000000 -0800
++++ ./tools/clang/lib/Driver/ToolChains.cpp	2016-12-21 21:55:21.000000000 -0800
+@@ -1030,8 +1030,8 @@
+     }
+   }
+ 
+-  // Default to use libc++ on OS X 10.9+ and iOS 7+.
+-  if (((isTargetMacOS() && !isMacosxVersionLT(10, 9)) ||
++  // Default to use libc++ on OS X 10.4+ and iOS 7+.
++  if (((isTargetMacOS() && !isMacosxVersionLT(10, 4)) ||
+        (isTargetIOSBased() && !isIPhoneOSVersionLT(7, 0)) ||
+        isTargetWatchOSBased()) &&
+       !Args.getLastArg(options::OPT_stdlib_EQ))
