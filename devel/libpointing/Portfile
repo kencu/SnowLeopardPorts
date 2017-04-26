@@ -5,6 +5,7 @@ PortGroup           cxx11 1.0
 PortGroup           github 1.0
 
 github.setup        INRIA libpointing 1.0.2 v
+
 categories          devel
 platforms           darwin
 maintainers         gmail.com:christian.frisson inria.fr:izzatbek.mukhanov openmaintainer
