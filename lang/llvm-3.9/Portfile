@@ -448,11 +448,11 @@ if {${subport} eq "llvm-${llvm_version}"} {
                 ${worksrcpath}/tools/clang/lib/Driver/ToolChains.cpp
         }
     }
-    #default_variants +libstdcxx
-    
+
+    default_variants +forcelibcxx
     variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
-    #patch clang to always default to -stdlib=libc++, even on <10.9
-         patchfiles-append 999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
+        #patch clang to always default to -stdlib=libc++, even on <10.9
+        patchfiles-append 999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
     }
 
     post-patch {
