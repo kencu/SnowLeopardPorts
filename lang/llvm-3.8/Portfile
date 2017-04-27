@@ -10,15 +10,15 @@ PortGroup cmake         1.0
 set llvm_version        3.8
 set llvm_version_no_dot 38
 name                    llvm-${llvm_version}
-revision                2
-subport                 clang-${llvm_version} { revision 7 }
+revision                3
+subport                 clang-${llvm_version} { revision 8 }
 set suffix              mp-${llvm_version}
 set sub_prefix          ${prefix}/libexec/llvm-${llvm_version}
 dist_subdir             llvm
 categories              lang
 platforms               darwin
 license                 NCSA
-maintainers             jeremyhu larryv
+maintainers             {jeremyhu @jeremyhu} larryv
 
 if {${subport} eq "llvm-${llvm_version}"} {
     homepage            http://llvm.org/
@@ -48,13 +48,19 @@ if {${subport} eq "llvm-${llvm_version}"} {
 
     depends_lib         port:libxml2 port:libomp port:llvm-${llvm_version} port:python27
     depends_run         port:clang_select port:ld64
-    depends_build-append port:cctools
-    depends_skip_archcheck-append cctools ld64 subversion
+    depends_skip_archcheck-append ld64
 
     # Clang doesn't actually use any of these, but the LLVM makefile
     # system overlinks its binaries. Remove (or convert to build deps?)
     # after #46040 is resolved.
     depends_lib-append  port:libedit port:libffi port:ncurses port:zlib
+
+    # Older Xcode's lipo doesn't support x86_64h slices
+    # https://trac.macports.org/ticket/53159#ticket
+    if {[vercmp $xcodeversion "6.0.0"] < 0} {
+        depends_build-append port:cctools
+        depends_skip_archcheck-append cctools
+    }
 
     default_variants    +analyzer
 }
@@ -157,10 +163,6 @@ if {${subport} eq "clang-${llvm_version}"} {
         compiler_rt-toolchain.patch \
         openmp-locations.patch
 
-#ken - patch clang to always default to -stdlib=libc++, even on <10.9
-
-    patchfiles-append 999-patch-clang-3.8-Toolchains-default-always-libcxx.diff
-
     # I'm not sure if we need to delete this.  It seems to build fine with it
     # present, but we used to explicitly only use this patch for the llvm subport.
     patchfiles-delete \
@@ -208,7 +210,7 @@ configure.args-append \
     -DLLVM_INCLUDE_EXAMPLES=OFF \
     -DLLVM_ENABLE_FFI=ON \
     -DLLVM_BINDINGS_LIST=none \
-    -DFFI_INCLUDE_DIR=${prefix}/include \
+    -DFFI_INCLUDE_DIR=`pkg-config --cflags-only-I libffi | sed 's/-I//'` \
     -DFFI_LIBRARY_DIR=${prefix}/lib
 
 # I'm not sure the exact version of Xcode that has a good enough libtool, but 3.2.6 seems to get past this when 3.1.4 doesn't:
@@ -217,6 +219,7 @@ configure.args-append \
 #     /Developer/usr/bin/libtool: for architecture i386 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
 if {[vercmp $xcodeversion "3.2.6"] < 0} {
     depends_build-append port:cctools
+    depends_skip_archcheck-append cctools
     configure.args-append \
         -DCMAKE_LIBTOOL=${prefix}/bin/libtool
 }
@@ -228,7 +231,9 @@ if {${subport} eq "llvm-${llvm_version}"} {
     select.group        clang
     select.file         ${filespath}/mp-${subport}
 
+    # CMAKE_LINKER is used to determine the value for HOST_LINK_VERSION
     configure.args-append \
+        -DCMAKE_LINKER=${prefix}/bin/ld \
         -DCLANG_INCLUDE_TESTS=OFF \
         -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
         -DLLVM_BUILD_RUNTIME=ON \
@@ -250,7 +255,7 @@ if {${subport} eq "clang-${llvm_version}"} {
 
 # blacklist current and future versions if they're not available in order to
 # help break potential dependency cycles.
-foreach ver {3.8 3.9 devel} {
+foreach ver {3.8 3.9 4.0 devel} {
     if {![file exists ${prefix}/bin/clang-mp-${ver}]} {
         compiler.blacklist-append macports-clang-${ver}
     }
@@ -379,6 +384,9 @@ post-destroot {
         #    file rename ${man} ${destroot}${prefix}/share/man/man1/[string map ".1 -${suffix}.1" ${basename}]
         #}
 
+        # https://trac.macports.org/ticket/53673
+        ln -s llvm-dsymutil ${destroot}${sub_prefix}/bin/dsymutil
+
         # https://llvm.org/bugs/show_bug.cgi?id=19465
         if {[variant_isset polly]} {
             ln -s LLVMPolly.so ${destroot}${sub_prefix}/lib/LLVMPolly.dylib
@@ -431,6 +439,12 @@ if {${subport} eq "llvm-${llvm_version}"} {
                 ${worksrcpath}/tools/clang/tools/scan-view/bin/scan-view
         }
     }
+    
+    variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
+        #patch clang to always default to -stdlib=libc++, even on <10.9
+        patchfiles-append 999-patch-clang-3.8-Toolchains-default-always-libcxx.diff
+    }
+
 
     post-patch {
         reinplace "s|@@PREFIX@@|${prefix}|" \
