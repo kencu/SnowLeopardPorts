@@ -10,15 +10,15 @@ PortGroup cmake         1.0
 set llvm_version        3.9
 set llvm_version_no_dot 39
 name                    llvm-${llvm_version}
-revision                2
-subport                 clang-${llvm_version} {}
+revision                3
+subport                 clang-${llvm_version} { revision 3 }
 set suffix              mp-${llvm_version}
 set sub_prefix          ${prefix}/libexec/llvm-${llvm_version}
 dist_subdir             llvm
 categories              lang
 platforms               darwin
 license                 NCSA
-maintainers             jeremyhu larryv
+maintainers             {jeremyhu @jeremyhu} larryv
 
 if {${subport} eq "llvm-${llvm_version}"} {
     homepage            http://llvm.org/
@@ -30,7 +30,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
                         around a well specified code representation known as \
                         the LLVM intermediate representation ("LLVM IR").
 
-    depends_lib         port:libedit port:libffi port:ncurses port:xar port:zlib
+    depends_lib         port:libedit port:libffi port:ncurses path:lib/libxar.dylib:xar port:zlib
     depends_run         bin:perl:perl5 port:llvm_select
 } elseif {${subport} eq "clang-${llvm_version}"} {
     homepage            http://clang.llvm.org/
@@ -48,13 +48,19 @@ if {${subport} eq "llvm-${llvm_version}"} {
 
     depends_lib         port:libxml2 port:libomp port:llvm-${llvm_version} port:python27
     depends_run         port:clang_select port:ld64
-    depends_build-append port:cctools
-    depends_skip_archcheck-append cctools ld64 subversion
+    depends_skip_archcheck-append ld64
 
     # Clang doesn't actually use any of these, but the LLVM makefile
     # system overlinks its binaries. Remove (or convert to build deps?)
     # after #46040 is resolved.
     depends_lib-append  port:libedit port:libffi port:ncurses port:zlib
+
+    # Older Xcode's lipo doesn't support x86_64h slices
+    # https://trac.macports.org/ticket/53159#ticket
+    if {[vercmp $xcodeversion "6.0.0"] < 0} {
+        depends_build-append port:cctools
+        depends_skip_archcheck-append cctools
+    }
 
     default_variants    +analyzer
 }
@@ -73,7 +79,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
 #default_variants-append +assertions
 #default_variants-append +debug
 
-version                 ${llvm_version}.0
+version                 ${llvm_version}.1
 epoch                   1
 master_sites            http://llvm.org/releases/${version}
 use_xz                  yes
@@ -91,24 +97,24 @@ if {${distfiles} ne ""} {
     }
 }
 
-checksums           llvm-3.9.0.src.tar.xz \
-                    rmd160  bbde781a914f6cd7fab3f71745fc576b2e7e23c9 \
-                    sha256  66c73179da42cee1386371641241f79ded250e117a79f571bbd69e56daa48948 \
-                    cfe-3.9.0.src.tar.xz \
-                    rmd160  a33d18142ce0fd69db59a96b75ffcfd20cef2f2c \
-                    sha256  7596a7c7d9376d0c89e60028fe1ceb4d3e535e8ea8b89e0eb094e0dcb3183d28 \
-                    compiler-rt-3.9.0.src.tar.xz \
-                    rmd160  3276ce7ef5031d47024345e2db16767885fd2278 \
-                    sha256  e0e5224fcd5740b61e416c549dd3dcda92f10c524216c1edb5e979e42078a59a \
-                    libcxx-3.9.0.src.tar.xz \
-                    rmd160  977a7c44cd29a4ba45d4ea36ac4e9c9a119e259d \
-                    sha256  d0b38d51365c6322f5666a2a8105785f2e114430858de4c25a86b49f227f5b06 \
-                    clang-tools-extra-3.9.0.src.tar.xz \
-                    rmd160  42264f2f895cea4330a5041d6b803551aeb1d2d1 \
-                    sha256  5b7aec46ec8e999ec683c87ad744082e1133781ee4b01905b4bdae5d20785f14 \
-                    polly-3.9.0.src.tar.xz \
-                    rmd160  76b4fba05ffbfa1ce1486e80b55824fdcbfcbfe2 \
-                    sha256  ef0dd25010099baad84597cf150b543c84feac2574d055d6780463d5de8cd97e
+checksums           llvm-3.9.1.src.tar.xz \
+                    rmd160  b0a3c68cfec83a2b4dad6922316b71c0dc25c40a \
+                    sha256  1fd90354b9cf19232e8f168faf2220e79be555df3aa743242700879e8fd329ee \
+                    cfe-3.9.1.src.tar.xz \
+                    rmd160  51930c2d55eacd44df28b49a84565771c94f418e \
+                    sha256  e6c4cebb96dee827fa0470af313dff265af391cb6da8d429842ef208c8f25e63 \
+                    compiler-rt-3.9.1.src.tar.xz \
+                    rmd160  15cb816616a09d83f76b65f4443884af475b4437 \
+                    sha256  d30967b1a5fa51a2503474aacc913e69fd05ae862d37bf310088955bdb13ec99 \
+                    libcxx-3.9.1.src.tar.xz \
+                    rmd160  43bcf879f60763425f5d296f4fa5ac0b9a0779f6 \
+                    sha256  25e615e428f60e651ed09ffd79e563864e3f4bc69a9e93ee41505c419d1a7461 \
+                    clang-tools-extra-3.9.1.src.tar.xz \
+                    rmd160  d3293699daafa69aaa062f47de4903ac8445d01a \
+                    sha256  29a5b65bdeff7767782d4427c7c64d54c3a8684bc6b217b74a70e575e4813635 \
+                    polly-3.9.1.src.tar.xz \
+                    rmd160  4d4109afd1f5b090301134dbba7dfd66a25a2bc3 \
+                    sha256  9ba5e61fc7bf8c7435f64e2629e0810c9b1d1b03aa5b5605b780d0e177b4cb46
 
 patch.pre_args  -p1
 patchfiles \
@@ -130,6 +136,7 @@ if {${subport} eq "clang-${llvm_version}"} {
         1005-Default-to-fragile-ObjC-runtime-when-targeting-darwi.patch \
         1006-Fixup-libstdc-header-search-paths-for-older-versions.patch \
         1007-Fix-build-issues-pre-Lion-due-to-missing-a-strnlen-d.patch \
+        1008-Sema-Don-t-diagnose-an-array-type-mismatch-when-the-.patch \
         2001-MacPorts-Only-Comment-out-SL-cctools-workaround.patch \
         2002-Update-CheckArches-to-fallback-on-Intel-ppc-if-ld-v-.patch \
         2003-Fall-back-on-xcodebuild-sdk-when-xcrun-sdk-is-not-su.patch \
@@ -144,11 +151,6 @@ if {${subport} eq "clang-${llvm_version}"} {
         3005-implement-atomic-using-mutex-lock_guard-for-64b-ops-.patch \
         compiler_rt-toolchain.patch \
         openmp-locations.patch
-
-#ken - patch clang to always default to -stdlib=libc++, even on <10.9
-
-    patchfiles-append 999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
-
 
     # https://llvm.org/bugs/show_bug.cgi?id=25681
     if {${worksrcdir} eq "trunk" || ${worksrcdir} eq "release_${llvm_version_no_dot}"} {
@@ -191,7 +193,7 @@ configure.args-append \
     -DLLVM_INCLUDE_EXAMPLES=OFF \
     -DLLVM_ENABLE_FFI=ON \
     -DLLVM_BINDINGS_LIST=none \
-    -DFFI_INCLUDE_DIR=${prefix}/include \
+    -DFFI_INCLUDE_DIR=`pkg-config --cflags-only-I libffi | sed 's/-I//'` \
     -DFFI_LIBRARY_DIR=${prefix}/lib
 
 # I'm not sure the exact version of Xcode that has a good enough libtool, but 3.2.6 seems to get past this when 3.1.4 doesn't:
@@ -200,6 +202,7 @@ configure.args-append \
 #     /Developer/usr/bin/libtool: for architecture i386 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
 if {[vercmp $xcodeversion "3.2.6"] < 0} {
     depends_build-append port:cctools
+    depends_skip_archcheck-append cctools
     configure.args-append \
         -DCMAKE_LIBTOOL=${prefix}/bin/libtool
 }
@@ -211,7 +214,9 @@ if {${subport} eq "llvm-${llvm_version}"} {
     select.group        clang
     select.file         ${filespath}/mp-${subport}
 
+    # CMAKE_LINKER is used to determine the value for HOST_LINK_VERSION
     configure.args-append \
+        -DCMAKE_LINKER=${prefix}/bin/ld \
         -DCLANG_INCLUDE_TESTS=OFF \
         -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
         -DLLVM_BUILD_RUNTIME=ON \
@@ -244,7 +249,7 @@ if {${subport} eq "clang-${llvm_version}"} {
 
 # blacklist current and future versions if they're not available in order to
 # help break potential dependency cycles.
-foreach ver {3.9 devel} {
+foreach ver {3.9 4.0 devel} {
     if {![file exists ${prefix}/bin/clang-mp-${ver}]} {
         compiler.blacklist-append macports-clang-${ver}
     }
@@ -373,6 +378,9 @@ post-destroot {
         #    file rename ${man} ${destroot}${prefix}/share/man/man1/[string map ".1 -${suffix}.1" ${basename}]
         #}
 
+        # https://trac.macports.org/ticket/53673
+        ln -s llvm-dsymutil ${destroot}${sub_prefix}/bin/dsymutil
+
         # https://llvm.org/bugs/show_bug.cgi?id=19465
         if {[variant_isset polly]} {
             ln -s LLVMPolly.so ${destroot}${sub_prefix}/lib/LLVMPolly.dylib
@@ -424,6 +432,27 @@ if {${subport} eq "llvm-${llvm_version}"} {
                 ${worksrcpath}/tools/clang/tools/scan-build/bin/set-xcode-analyzer \
                 ${worksrcpath}/tools/clang/tools/scan-view/bin/scan-view
         }
+    }
+
+    variant libstdcxx description {-stdlib=macports-libstdc++ searches for MacPorts libstdc++} {
+        depends_lib-append port:gcc6
+
+        patchfiles-append 9001-macports-libstdcxx.diff
+
+        post-patch {
+            reinplace "s|@@MACPORTS_GCC_INCLUDE_DIR@@|${prefix}/include/gcc6/c++|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_HOST_NAME@@|${build_arch}-apple-darwin${os.major}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_libstdc++@@|${prefix}/lib/libgcc/libstdc++.6.dylib|g" \
+                ${worksrcpath}/tools/clang/lib/Driver/ToolChains.cpp
+        }
+    }
+    #default_variants +libstdcxx
+    
+    variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
+    #patch clang to always default to -stdlib=libc++, even on <10.9
+         patchfiles-append 999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
     }
 
     post-patch {
