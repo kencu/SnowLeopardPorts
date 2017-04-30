@@ -4,8 +4,8 @@ PortSystem          1.0
 PortGroup           github 1.0
 #PortGroup           cmake 1.0
 
-github.setup        kencu snowleopardfixes 6513054ce60c14c1e8c1ab413cd396e3ed847ce8
-version             20170428
+github.setup        kencu snowleopardfixes 3670ccbd3ed5049183ad064ee6df8dca233dae34
+version             20170430
 categories          sysutils
 platforms           darwin
 maintainers         gmail.com:ken.cunningham.webuse
@@ -14,8 +14,8 @@ license             GPL-2
 description         A library to replace common functions missing from SnowLeopard
 long_description    ${description}
 
-checksums           rmd160  c5911919f06adc2b8cbd6d35547bd23788df485d \
-                    sha256  7fd8881af1368e4dc9dd5accf3db618746c98a70782a3dc3ecbcdd5f8b3b77db
+checksums           rmd160  b38f73dbb5454590c11ea4e0b107a474160d7354 \
+                    sha256  68198e741a5e76a4826bf09d424e9cea6e824b897dc28df3a606d82feaa8232d
 
 use_configure       no
 
