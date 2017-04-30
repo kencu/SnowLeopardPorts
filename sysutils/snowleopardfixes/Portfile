@@ -1,0 +1,29 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           github 1.0
+#PortGroup           cmake 1.0
+
+github.setup        kencu snowleopardfixes 6513054ce60c14c1e8c1ab413cd396e3ed847ce8
+version             20170428
+categories          sysutils
+platforms           darwin
+maintainers         gmail.com:ken.cunningham.webuse
+license             GPL-2
+
+description         A library to replace common functions missing from SnowLeopard
+long_description    ${description}
+
+checksums           rmd160  c5911919f06adc2b8cbd6d35547bd23788df485d \
+                    sha256  7fd8881af1368e4dc9dd5accf3db618746c98a70782a3dc3ecbcdd5f8b3b77db
+
+use_configure       no
+
+build.env           CXX="${configure.cxx}" \
+                    CXXFLAGS="${configure.cxxflags} [get_canonical_archflags cxx]" \
+                    CC="${configure.cc}" \
+                    CFLAGS="${configure.cflags}" \
+                    LDFLAGS="${configure.ldflags} [get_canonical_archflags ld]" \
+                    PREFIX=${prefix}
+
+destroot.env        PREFIX=${prefix}
