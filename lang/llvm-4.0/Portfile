@@ -238,7 +238,7 @@ configure.args-append \
 #     /Developer/usr/bin/libtool: for architecture x86_64 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
 #     /Developer/usr/bin/libtool: for architecture: (null) file: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o is not an object file (not allowed in a library)
 #     /Developer/usr/bin/libtool: for architecture i386 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
-if {[vercmp $xcodeversion "3.2.6"] < 0} {
+if {[vercmp $xcodeversion "4.3"] < 0} {
     depends_build-append port:cctools
     depends_skip_archcheck-append cctools
     configure.args-append \
@@ -372,17 +372,17 @@ platform darwin {
     configure.cxxflags-append -std=c++11
 }
 
-
+# KEN
 platform darwin {
-    # patch broken float.h on clang only (doesn't exist for llvm only)
+    # float.h broken on clang (file doesn't exist when building llvm only)
     # only for < SnowLeopard
     if {${subport} eq "clang-${llvm_version}" && ${os.major} < 11 } {
-        # KEN
         #  https://bugs.llvm.org//show_bug.cgi?id=31504
         patchfiles-append 998-patch-tools-clang-lib-headers-float-fix-SL.diff
     }
 
 }
+
 
 pre-fetch {
     if {${subport} eq "lldb-${llvm_version}"} {
