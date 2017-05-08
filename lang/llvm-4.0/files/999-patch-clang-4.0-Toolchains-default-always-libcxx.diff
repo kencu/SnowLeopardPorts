@@ -1,0 +1,13 @@
+--- ./tools/clang/lib/driver/ToolChains.cpp.orig	2017-05-06 10:35:35.000000000 -0700
++++ ./tools/clang/lib/driver/ToolChains.cpp	2017-05-06 10:36:19.000000000 -0700
+@@ -69,8 +69,8 @@
+ bool MachO::HasNativeLLVMSupport() const { return true; }
+ 
+ ToolChain::CXXStdlibType Darwin::GetDefaultCXXStdlibType() const {
+-  // Default to use libc++ on OS X 10.9+ and iOS 7+.
+-  if ((isTargetMacOS() && !isMacosxVersionLT(10, 9)) ||
++  // Default to use libc++ on OS X 10.4+ and iOS 7+.
++  if ((isTargetMacOS() && !isMacosxVersionLT(10, 4)) ||
+        (isTargetIOSBased() && !isIPhoneOSVersionLT(7, 0)) ||
+        isTargetWatchOSBased())
+     return ToolChain::CST_Libcxx;
