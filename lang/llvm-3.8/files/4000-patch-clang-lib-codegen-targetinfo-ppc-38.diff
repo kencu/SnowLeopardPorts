@@ -1,0 +1,101 @@
+--- ./tools/clang/lib/CodeGen/TargetInfo.cpp.orig	2017-05-25 18:00:06.000000000 -0700
++++ ./tools/clang/lib/CodeGen/TargetInfo.cpp	2017-05-25 18:08:20.000000000 -0700
+@@ -3713,6 +3713,84 @@
+   return false;
+ }
+ 
++namespace {
++/// PPC32_Darwin_ABIInfo - The 32-bit PowerPC Darwin ABI information.
++class PPC32_Darwin_ABIInfo : public DefaultABIInfo {
++public:
++  PPC32_Darwin_ABIInfo(CodeGen::CodeGenTypes &CGT) : DefaultABIInfo(CGT) {}
++
++  Address EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
++                    QualType Ty) const override;
++};
++
++class PPC32DarwinTargetCodeGenInfo : public TargetCodeGenInfo {
++public:
++  PPC32DarwinTargetCodeGenInfo(CodeGenTypes &CGT)
++      : TargetCodeGenInfo(new PPC32_Darwin_ABIInfo(CGT)) {}
++
++  int getDwarfEHStackPointer(CodeGen::CodeGenModule &M) const override {
++    // This is recovered from gcc output.
++    return 1; // r1 is the dedicated stack pointer
++  }
++
++  bool initDwarfEHRegSizeTable(CodeGen::CodeGenFunction &CGF,
++                               llvm::Value *Address) const override;
++};
++}
++
++Address PPC32_Darwin_ABIInfo::EmitVAArg(CodeGenFunction &CGF,
++                                        Address VAListAddr,
++                                        QualType Ty) const {
++  return emitVoidPtrVAArg(CGF, VAListAddr, Ty, /*Indirect=*/ false,
++                          getContext().getTypeInfoInChars(Ty),
++                          CharUnits::fromQuantity(4),
++                          /*AllowHigherAlign=*/ true);
++}
++
++// Copied from PP32TargetCodeGenInfo.
++bool
++PPC32DarwinTargetCodeGenInfo::initDwarfEHRegSizeTable(
++      CodeGen::CodeGenFunction &CGF, llvm::Value *Address) const {
++  // This is calculated from the LLVM and GCC tables and verified
++  // against gcc output.  AFAIK all ABIs use the same encoding.
++
++  CodeGen::CGBuilderTy &Builder = CGF.Builder;
++
++  llvm::IntegerType *i8 = CGF.Int8Ty;
++  llvm::Value *Four8 = llvm::ConstantInt::get(i8, 4);
++  llvm::Value *Eight8 = llvm::ConstantInt::get(i8, 8);
++  llvm::Value *Sixteen8 = llvm::ConstantInt::get(i8, 16);
++
++  // 0-31: r0-31, the 4-byte general-purpose registers
++  AssignToArrayRange(Builder, Address, Four8, 0, 31);
++
++  // 32-63: fp0-31, the 8-byte floating-point registers
++  AssignToArrayRange(Builder, Address, Eight8, 32, 63);
++
++  // 64-76 are various 4-byte special-purpose registers:
++  // 64: mq
++  // 65: lr
++  // 66: ctr
++  // 67: ap
++  // 68-75 cr0-7
++  // 76: xer
++  AssignToArrayRange(Builder, Address, Four8, 64, 76);
++
++  // 77-108: v0-31, the 16-byte vector registers
++  AssignToArrayRange(Builder, Address, Sixteen8, 77, 108);
++
++  // 109: vrsave
++  // 110: vscr
++  // 111: spe_acc
++  // 112: spefscr
++  // 113: sfp
++  AssignToArrayRange(Builder, Address, Four8, 109, 113);
++
++  return false;
++}
++
++
++
+ // PowerPC-64
+ 
+ namespace {
+@@ -7555,8 +7633,13 @@
+     }
+ 
+   case llvm::Triple::ppc:
++    if (Triple.isOSDarwin()) {
++      return *(TheTargetCodeGenInfo =
++             new PPC32DarwinTargetCodeGenInfo(Types));
++    } else {
+     return *(TheTargetCodeGenInfo = 
+              new PPC32TargetCodeGenInfo(Types, CodeGenOpts.FloatABI == "soft"));
++    }
+   case llvm::Triple::ppc64:
+     if (Triple.isOSBinFormatELF()) {
+       PPC64_SVR4_ABIInfo::ABIKind Kind = PPC64_SVR4_ABIInfo::ELFv1;

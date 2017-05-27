@@ -161,7 +161,9 @@ if {${subport} eq "clang-${llvm_version}"} {
         3004-Fix-missing-long-long-math-prototypes-when-using-the.patch \
         3005-implement-atomic-using-mutex-lock_guard-for-64b-ops-.patch \
         compiler_rt-toolchain.patch \
-        openmp-locations.patch
+        openmp-locations.patch \
+        4000-patch-clang-lib-codegen-targetinfo-ppc-38.diff \
+        4001-patch-compilerrtdarwinutils-ppc.diff
 
     # I'm not sure if we need to delete this.  It seems to build fine with it
     # present, but we used to explicitly only use this patch for the llvm subport.
@@ -261,6 +263,7 @@ foreach ver {3.8 3.9 4.0 devel} {
     }
 }
 
+
 platform darwin {
     # Note that we are forcing this choice.  This means that anything linking
     # against llvm-3.5 needs to also be using libc++.  This is possibly
@@ -277,6 +280,32 @@ platform darwin {
         }
     }
 }
+
+
+# fix build on powerpc
+platform darwin powerpc {
+
+    #delete all the compiler blacklisting above
+    compiler.blacklist
+
+    # build with gcc6, which works
+    compiler.whitelist macports-gcc-6
+    supported_archs ppc ppc64
+    
+    # dont build with libomp, use gcc6's libgomp instead
+    # we will still need to fix up the macports patch to the directory for this library 
+    # to point to libgcc's version
+
+    depends_lib-delete port:libomp
+    if {${subport} eq "clang-${llvm_version}"} {
+        configure.args-append --with-clang-default-openmp-runtime=libgomp
+    }
+}
+
+
+
+
+
 
 variant universal {
     post-extract {
