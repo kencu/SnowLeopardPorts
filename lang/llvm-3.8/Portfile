@@ -292,6 +292,9 @@ platform darwin powerpc {
     compiler.whitelist macports-gcc-6
     supported_archs ppc ppc64
     
+    # new - try to restrict the huge build to something useful on ppc
+    configure.args-append -DLLVM_TARGETS_TO_BUILD="ppc;ppc64"
+    
     # dont build with libomp, use gcc6's libgomp instead
     # we will still need to fix up the macports patch to the directory for this library 
     # to point to libgcc's version
@@ -299,6 +302,10 @@ platform darwin powerpc {
     depends_lib-delete port:libomp
     if {${subport} eq "clang-${llvm_version}"} {
         configure.args-append --with-clang-default-openmp-runtime=libgomp
+        
+        # new addition - this might fix
+        # https://trac.macports.org/ticket/54242
+        configure.args-append -DDARWIN_osx_ARCHS="ppc;ppc64"
     }
 }
 
