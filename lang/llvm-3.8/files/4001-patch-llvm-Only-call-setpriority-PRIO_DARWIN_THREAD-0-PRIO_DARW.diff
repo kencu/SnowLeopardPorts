@@ -1,0 +1,23 @@
+--- ./lib/Support/CrashRecoveryContext.cpp.orig	2017-06-02 22:16:22.000000000 -0700
++++ ./lib/Support/CrashRecoveryContext.cpp	2017-06-02 22:20:41.000000000 -0700
+@@ -342,16 +342,19 @@
+   return CRC->Backtrace;
+ }
+ 
+-// FIXME: Portability.
+ static void setThreadBackgroundPriority() {
+ #ifdef __APPLE__
++#if defined(USE_DARWIN_THREADS) && defined(PRIO_DARWIN_THREAD) && defined(PRIO_DARWIN_BG)
+   setpriority(PRIO_DARWIN_THREAD, 0, PRIO_DARWIN_BG);
+ #endif
++#endif
+ }
+ 
+ static bool hasThreadBackgroundPriority() {
+ #ifdef __APPLE__
++#if defined(USE_DARWIN_THREADS) && defined(PRIO_DARWIN_THREAD) && defined(PRIO_DARWIN_BG)
+   return getpriority(PRIO_DARWIN_THREAD, 0) == 1;
++#endif
+ #else
+   return false;
+ #endif

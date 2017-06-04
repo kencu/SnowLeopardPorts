@@ -1,6 +1,6 @@
---- ./tools/clang/lib/CodeGen/TargetInfo.cpp.orig	2017-05-25 18:00:06.000000000 -0700
-+++ ./tools/clang/lib/CodeGen/TargetInfo.cpp	2017-05-25 18:08:20.000000000 -0700
-@@ -3713,6 +3713,84 @@
+--- ./tools/clang/lib/CodeGen/TargetInfo.cpp.orig	2017-05-30 12:30:25.000000000 -0700
++++ ./tools/clang/lib/CodeGen/TargetInfo.cpp	2017-05-30 12:36:09.000000000 -0700
+@@ -3713,6 +3713,88 @@
    return false;
  }
  
@@ -32,10 +32,15 @@
 +Address PPC32_Darwin_ABIInfo::EmitVAArg(CodeGenFunction &CGF,
 +                                        Address VAListAddr,
 +                                        QualType Ty) const {
++  // Cap the alignment of function arguments to the natural stack alignment
++  // for all types, except vectors and aggregates.
++  std::pair<CharUnits, CharUnits> Info = getContext().getTypeInfoInChars(Ty);
++  CharUnits Slot = CharUnits::fromQuantity(4);
++  if (!Ty->isVectorType() && !isAggregateTypeForABI(Ty))
++    Info.second = std::min(Info.second, Slot);
++
 +  return emitVoidPtrVAArg(CGF, VAListAddr, Ty, /*Indirect=*/ false,
-+                          getContext().getTypeInfoInChars(Ty),
-+                          CharUnits::fromQuantity(4),
-+                          /*AllowHigherAlign=*/ true);
++                          Info, Slot, /*AllowHigherAlign=*/ true);
 +}
 +
 +// Copied from PP32TargetCodeGenInfo.
@@ -81,20 +86,23 @@
 +}
 +
 +
-+
  // PowerPC-64
  
  namespace {
-@@ -7555,8 +7633,13 @@
+@@ -7554,9 +7636,14 @@
+       return *(TheTargetCodeGenInfo = new ARMTargetCodeGenInfo(Types, Kind));
      }
  
-   case llvm::Triple::ppc:
+-  case llvm::Triple::ppc:
+-    return *(TheTargetCodeGenInfo = 
+-             new PPC32TargetCodeGenInfo(Types, CodeGenOpts.FloatABI == "soft"));
++   case llvm::Triple::ppc:
 +    if (Triple.isOSDarwin()) {
 +      return *(TheTargetCodeGenInfo =
 +             new PPC32DarwinTargetCodeGenInfo(Types));
 +    } else {
-     return *(TheTargetCodeGenInfo = 
-              new PPC32TargetCodeGenInfo(Types, CodeGenOpts.FloatABI == "soft"));
++     return *(TheTargetCodeGenInfo = 
++              new PPC32TargetCodeGenInfo(Types, CodeGenOpts.FloatABI == "soft"));
 +    }
    case llvm::Triple::ppc64:
      if (Triple.isOSBinFormatELF()) {

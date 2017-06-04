@@ -130,7 +130,8 @@ patchfiles \
         0009-CMake-Fix-rpath-construction-for-out-of-tree-builds.patch \
         0010-CMake-Make-CMAKE_INSTALL_RPATH-work-again.patch \
         0011-CMake-Fix-llvm_setup_rpath-function.patch \
-        llvm-skip-unittests.patch
+        llvm-skip-unittests.patch \
+        4001-patch-llvm-Only-call-setpriority-PRIO_DARWIN_THREAD-0-PRIO_DARW.diff
 
 if {${subport} eq "clang-${llvm_version}"} {
     patchfiles-append \
@@ -163,7 +164,14 @@ if {${subport} eq "clang-${llvm_version}"} {
         compiler_rt-toolchain.patch \
         openmp-locations.patch \
         4000-patch-clang-lib-codegen-targetinfo-ppc-38.diff \
-        4001-patch-compilerrtdarwinutils-ppc.diff
+        4001-patch-clang-3.8-gccabi-sema.diff \
+        4002-patch-clang-3.8-gccabi-mangler.diff
+    
+    # 4000 - backport va_args support for PPC from trunk
+    # <https://reviews.llvm.org/D33499>
+    
+    # 4001 and 4002 - backport gcc5.1 abi support from trunk to 3.8, using debian patches
+    # <https://sources.debian.net/src/llvm-toolchain-3.8/1:3.8.1-24/debian/patches/>
 
     # I'm not sure if we need to delete this.  It seems to build fine with it
     # present, but we used to explicitly only use this patch for the llvm subport.
@@ -285,33 +293,39 @@ platform darwin {
 # fix build on powerpc
 platform darwin powerpc {
 
+    # at present, we are going to build clang-3.8 using gcc6
+    # it can link against either libc++ (on 10.5) or libstdc++ (on 10.4+)
+    # it can also link against gcc5+ libstdc++ to get cxx11, using
+    # -stdlib=macports-libstdc++ with the ABI mode set to be 4 compatible
+    # to do this, it is best to build libgcc with ABI mode set to 4
+
+    # these don't appear to be needed and are a PITA to build on PPC
+    depends_lib-delete  port:libedit port:ncurses port:zlib
+
+    # not as sure about this one - might be needed
+    # depends_lib-delete  port:libffi
+
     #delete all the compiler blacklisting above
     compiler.blacklist
-
-    # build with gcc6, which works
+    
+    # build with gcc6, which works. probably gcc 4.8+ would work as well, not tried
     compiler.whitelist macports-gcc-6
     supported_archs ppc ppc64
     
-    # new - try to restrict the huge build to something useful on ppc
-    configure.args-append -DLLVM_TARGETS_TO_BUILD="ppc;ppc64"
+    # To do - find a way to build only the ppc and ppc64 targets
     
-    # dont build with libomp, use gcc6's libgomp instead
-    # we will still need to fix up the macports patch to the directory for this library 
+    # libomp doesn't presently build on powerpc so
+    # use gcc6's libgomp instead
+    
+    # To do - we will still need to fix up the macports patch to the directory for this library 
     # to point to libgcc's version
 
     depends_lib-delete port:libomp
     if {${subport} eq "clang-${llvm_version}"} {
         configure.args-append --with-clang-default-openmp-runtime=libgomp
-        
-        # new addition - this might fix
-        # https://trac.macports.org/ticket/54242
-        configure.args-append -DDARWIN_osx_ARCHS="ppc;ppc64"
     }
+
 }
-
-
-
-
 
 
 variant universal {
@@ -475,9 +489,25 @@ if {${subport} eq "llvm-${llvm_version}"} {
                 ${worksrcpath}/tools/clang/tools/scan-view/bin/scan-view
         }
     }
+    
+    
+    variant libstdcxx description {-stdlib=macports-libstdc++ searches for MacPorts libstdc++} {
+        depends_lib-append port:gcc6
 
-    default_variants +forcelibcxx
-    variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
+        patchfiles-append 9001-macports-libstdcxx-3.8.diff
+
+        post-patch {
+            reinplace "s|@@MACPORTS_GCC_INCLUDE_DIR@@|${prefix}/include/gcc6/c++|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_HOST_NAME@@|${build_arch}-apple-darwin${os.major}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_libstdc++@@|${prefix}/lib/libgcc/libstdc++.6.dylib|g" \
+                ${worksrcpath}/tools/clang/lib/Driver/ToolChains.cpp
+        }
+    }
+
+
+    variant forcelibcxx description {defaults to -stdlib=libc++ on all systems unless otherwise specified}  {
         #patch clang to always default to -stdlib=libc++, even on <10.9
         patchfiles-append 999-patch-clang-3.8-Toolchains-default-always-libcxx.diff
     }
