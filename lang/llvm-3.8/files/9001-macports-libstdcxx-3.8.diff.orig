@@ -95,8 +95,8 @@ diff -U 6 -r /Users/Shared/tools/clang/lib/Driver/ToolChains.cpp ./tools/clang/l
      CmdArgs.push_back("-lstdc++");
      break;
 +   case ToolChain::CST_MacPortsLibstdcxx:
-+    if (getVFS().exists("@@MACPORTS_libstdc++@@")) {
-+      CmdArgs.push_back("@@MACPORTS_libstdc++@@");
++    if (getVFS().exists("/opt/local/lib/libgcc/libstdc++.6.dylib")) {
++      CmdArgs.push_back("/opt/local/lib/libgcc/libstdc++.6.dylib");
 +      return;
 +    }
 +    CmdArgs.push_back("-lstdc++");
@@ -160,7 +160,7 @@ diff -U 6 -r /Users/Shared/tools/clang/lib/Frontend/InitHeaderSearch.cpp ./tools
    return !Path.empty() && llvm::sys::path::is_separator(Path[0]);
  #else
 -  return llvm::sys::path::is_absolute(Path);
-+  return llvm::sys::path::is_absolute(Path) && Path.find("@@MACPORTS_GCC_INCLUDE_DIR@@")!=0;
++  return llvm::sys::path::is_absolute(Path) && Path.find("/opt/local/include/gcc6/c++")!=0;
  #endif
  }
  
@@ -175,8 +175,8 @@ diff -U 6 -r /Users/Shared/tools/clang/lib/Frontend/InitHeaderSearch.cpp ./tools
      case llvm::Triple::ppc:
      case llvm::Triple::ppc64:
 +      if (HSOpts.UseMacPortsLibstdcxx) {
-+        AddGnuCPlusPlusIncludePaths("@@MACPORTS_GCC_INCLUDE_DIR@@",
-+                                    "ppc-apple-darwin@@MACPORTS_OS_MAJOR@@", "", "ppc64",
++        AddGnuCPlusPlusIncludePaths("/opt/local/include/gcc6/c++",
++                                    "x86_64-apple-darwin10", "", "ppc64",
 +                                    triple);
 +      } else {
        AddGnuCPlusPlusIncludePaths("/usr/include/c++/4.2.1",
@@ -191,8 +191,8 @@ diff -U 6 -r /Users/Shared/tools/clang/lib/Frontend/InitHeaderSearch.cpp ./tools
      case llvm::Triple::x86:
      case llvm::Triple::x86_64:
 +      if (HSOpts.UseMacPortsLibstdcxx) {
-+        AddGnuCPlusPlusIncludePaths("@@MACPORTS_GCC_INCLUDE_DIR@@",
-+                                    "x86_64-apple-darwin@@MACPORTS_OS_MAJOR@@", "i386", "", triple);
++        AddGnuCPlusPlusIncludePaths("/opt/local/include/gcc6/c++",
++                                    "x86_64-apple-darwin10", "i386", "", triple);
 +      } else {
        AddGnuCPlusPlusIncludePaths("/usr/include/c++/4.2.1",
                                    "i686-apple-darwin10", "", "x86_64", triple);

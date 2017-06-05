@@ -272,7 +272,7 @@ foreach ver {3.8 3.9 4.0 devel} {
 }
 
 
-platform darwin {
+platform darwin i386 {
     # Note that we are forcing this choice.  This means that anything linking
     # against llvm-3.5 needs to also be using libc++.  This is possibly
     # problematic, but luckily there is just a limited set of such dependents.
@@ -499,7 +499,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
         post-patch {
             reinplace "s|@@MACPORTS_GCC_INCLUDE_DIR@@|${prefix}/include/gcc6/c++|g" \
                 ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
-            reinplace "s|@@MACPORTS_HOST_NAME@@|${build_arch}-apple-darwin${os.major}|g" \
+            reinplace "s|@@MACPORTS_OS_MAJOR@@|${os.major}|g" \
                 ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
             reinplace "s|@@MACPORTS_libstdc++@@|${prefix}/lib/libgcc/libstdc++.6.dylib|g" \
                 ${worksrcpath}/tools/clang/lib/Driver/ToolChains.cpp
