@@ -47,8 +47,8 @@ post-patch {
         ${worksrcpath}/avahi-ui/Makefile.in
 }
 
-platform darwin 10 {
-    # fix missing define on SL
+if {${os.platform} eq "darwin" && ${os.major} < 11} {
+    # fix missing define on older systems
     configure.cppflags-append -DO_CLOEXEC=0
 }
 
