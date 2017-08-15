@@ -151,7 +151,7 @@ configure.cxxflags-append   -ftemplate-depth=256
 
 
 # fix build on older systems
-if {${os.platform} eq "darwin" && ${os.major} < 11} {
+if {${os.platform} eq "darwin" && ${os.major} < 12} {
     
     # add dep for newer ruby and spec this for build
     # https://trac.macports.org/ticket/52016
@@ -163,7 +163,7 @@ if {${os.platform} eq "darwin" && ${os.major} < 11} {
     # https://trac.macports.org/ticket/52016
     patchfiles-append patch-snowleopard-cmakelists-stdcformatmacros.diff
     
-    # fix a Cursor name collision that occurs on SL (but not other systems?)
+    # fix a Cursor name collision that occurs on systems with Carbon
     # https://trac.macports.org/ticket/52016
     if {[variant_isset x11]} {
         patchfiles-append patch-snowleopard-npruntime-redefine-cursor.diff
@@ -191,11 +191,6 @@ variant x11 conflicts quartz {
     depends_lib-append \
         port:mesa \
         port:xorg-libXt
-
-    if {${os.platform} eq "darwin" && ${os.major} < 11} {
-        # fix a Cursor name collision that seems to occur on SL (but not others?)
-        # https://trac.macports.org/ticket/52016
-        patchfiles-append patch-snowleopard-npruntime-redefine-cursor.diff
     }
 }
 
