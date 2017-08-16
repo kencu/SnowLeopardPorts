@@ -150,6 +150,12 @@ configure.cflags-append     -ftemplate-depth=256
 configure.cxxflags-append   -ftemplate-depth=256
 
 
+# this block needs to go here so subsequent logic works
+if {![variant_isset quartz]} {
+    default_variants-append +x11 +gtk2
+}
+
+
 # fix build on older systems
 if {${os.platform} eq "darwin" && ${os.major} < 12} {
     
@@ -158,16 +164,20 @@ if {${os.platform} eq "darwin" && ${os.major} < 12} {
     depends_build-append    port:ruby24
     configure.args-append   -DRUBY_EXECUTABLE=${prefix}/bin/ruby2.4
     
-    # fix missing PRId64 definitions on some systems
+    # fix missing PRId64 definitions on systems
+    # that don't define __STDC_FORMAT_MACROS by default
     # https://bugs.webkit.org/show_bug.cgi?id=156596
     # https://trac.macports.org/ticket/52016
     patchfiles-append patch-snowleopard-cmakelists-stdcformatmacros.diff
     
-    # fix a Cursor name collision that occurs on systems with Carbon
+    # fix a Cursor name collision that occurs on systems that include Carbon API
     # https://trac.macports.org/ticket/52016
     if {[variant_isset x11]} {
         patchfiles-append patch-snowleopard-npruntime-redefine-cursor.diff
     }
+    
+    # on older systems, build minibrowser by default to test
+    default_variants-append +minibrowser
 }
 
 variant quartz conflicts x11 gtk2 {
@@ -191,7 +201,6 @@ variant x11 conflicts quartz {
     depends_lib-append \
         port:mesa \
         port:xorg-libXt
-    }
 }
 
 variant minibrowser description {Build and install MiniBrowser (for testing)} {
@@ -207,9 +216,6 @@ variant gtk2 conflicts quartz description {Enable support for GTK+2 plugins} {
     configure.args-append   -DENABLE_PLUGIN_PROCESS_GTK2=ON
 }
 
-if {![variant_isset quartz]} {
-    default_variants-append +x11 +gtk2
-}
 
 livecheck.type      regex
 livecheck.url       http://webkitgtk.org/releases/
