@@ -35,5 +35,8 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-PortIndex
-PortIndex.quick
+
+/PortIndex
+/PortIndex.quick
+
+*/*/work
