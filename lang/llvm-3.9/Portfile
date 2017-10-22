@@ -10,8 +10,8 @@ PortGroup cmake         1.0
 set llvm_version        3.9
 set llvm_version_no_dot 39
 name                    llvm-${llvm_version}
-revision                3
-subport                 clang-${llvm_version} { revision 3 }
+revision                5
+subport                 clang-${llvm_version} { revision 7 }
 set suffix              mp-${llvm_version}
 set sub_prefix          ${prefix}/libexec/llvm-${llvm_version}
 dist_subdir             llvm
@@ -150,8 +150,7 @@ if {${subport} eq "clang-${llvm_version}"} {
         3004-Fix-missing-long-long-math-prototypes-when-using-the.patch \
         3005-implement-atomic-using-mutex-lock_guard-for-64b-ops-.patch \
         compiler_rt-toolchain.patch \
-        openmp-locations.patch \
-        4000-patch-clang-lib-codegen-targetinfo-ppc-39.diff
+        openmp-locations.patch
 
     # https://llvm.org/bugs/show_bug.cgi?id=25681
     if {${worksrcdir} eq "trunk" || ${worksrcdir} eq "release_${llvm_version_no_dot}"} {
@@ -197,17 +196,6 @@ configure.args-append \
     -DFFI_INCLUDE_DIR=`pkg-config --cflags-only-I libffi | sed 's/-I//'` \
     -DFFI_LIBRARY_DIR=${prefix}/lib
 
-# I'm not sure the exact version of Xcode that has a good enough libtool, but 3.2.6 seems to get past this when 3.1.4 doesn't:
-#     /Developer/usr/bin/libtool: for architecture x86_64 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
-#     /Developer/usr/bin/libtool: for architecture: (null) file: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o is not an object file (not allowed in a library)
-#     /Developer/usr/bin/libtool: for architecture i386 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
-if {[vercmp $xcodeversion "3.2.6"] < 0} {
-    depends_build-append port:cctools
-    depends_skip_archcheck-append cctools
-    configure.args-append \
-        -DCMAKE_LIBTOOL=${prefix}/bin/libtool
-}
-
 if {${subport} eq "llvm-${llvm_version}"} {
     select.group        llvm
     select.file         ${filespath}/mp-${subport}
@@ -227,7 +215,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
     # TODO: libc++ shouldn't be built at all.
     #       https://llvm.org/bugs/show_bug.cgi?id=25666
 
-    if {${os.major} <= 12} {
+    if {${os.major} <= 13} {
         # We unfortunately don't have an option to just turn off tsan
         # https://llvm.org/bugs/show_bug.cgi?id=27715
         configure.args-append \
@@ -256,6 +244,21 @@ foreach ver {3.9 4.0 devel} {
     }
 }
 
+# I'm not sure the exact version of Xcode that has a good enough libtool, but 3.2.6 seems to get past this when 3.1.4 doesn't:
+#     /Developer/usr/bin/libtool: for architecture x86_64 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
+#     /Developer/usr/bin/libtool: for architecture: (null) file: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o is not an object file (not allowed in a library)
+#     /Developer/usr/bin/libtool: for architecture i386 object: CMakeFiles/LLVMSupport.dir/PluginLoader.cpp.o malformed object (unknown load command 1)
+if {[string match macports-clang-* ${configure.compiler}]} {
+    depends_build-append port:cctools
+    depends_skip_archcheck-append cctools
+}
+
+# Set CMAKE_LIBTOOL if we're using MacPorts-provided cctools
+if {[lsearch -exact $PortInfo(depends_build) port:cctools] != -1} {
+    configure.args-append \
+        -DCMAKE_LIBTOOL=${prefix}/bin/libtool
+}
+
 platform darwin {
     # Note that we are forcing this choice.  This means that anything linking
     # against llvm-3.5 needs to also be using libc++.  This is possibly
@@ -272,37 +275,6 @@ platform darwin {
         }
     }
 }
-
-
-# fix build on powerpc
-platform darwin powerpc {
-
-
-    #delete all the compiler blacklisting above
-    compiler.blacklist
-
-
-    # build with gcc6, which works
-    compiler.whitelist macports-gcc-6
-    supported_archs ppc ppc64
-    
-
-    # new - try to restrict the huge build to something useful on ppc
-    # unfortunately this string doesn't work
-    # configure.args-append -DLLVM_TARGETS_TO_BUILD="ppc;ppc64"
-    
-
-
-    # libomp doesn't presently build on powerpc so
-    # dont build with libomp, use gcc6's libgomp instead
-    # we will still need to fix up the macports patch to the directory for this library 
-    # to point to libgcc's version
-    depends_lib-delete port:libomp
-    if {${subport} eq "clang-${llvm_version}"} {
-        configure.args-append --with-clang-default-openmp-runtime=libgomp
-    }
-}
-
 
 variant universal {
     post-extract {
@@ -399,7 +371,13 @@ post-destroot {
         set bin_filename [string map "${sub_prefix} ${prefix}" ${bin}]-${suffix}
         set exec_path [string map "${destroot}${sub_prefix} ${sub_prefix}" ${bin}]
 
-        xinstall -m 755 "${filespath}/llvm-bin" "${bin_filename}"
+        # see https://trac.macports.org/ticket/54985
+        if {${os.platform} eq "darwin" && [vercmp ${xcodeversion} 4.6] < 0} {
+             xinstall -m 755 "${filespath}/llvm-bin-compat" "${bin_filename}"
+        } else {
+             xinstall -m 755 "${filespath}/llvm-bin" "${bin_filename}"
+        }
+
         reinplace "s:EXEC_PATH:${exec_path}:" "${bin_filename}"
     }
 
@@ -467,25 +445,71 @@ if {${subport} eq "llvm-${llvm_version}"} {
     }
 
     variant libstdcxx description {-stdlib=macports-libstdc++ searches for MacPorts libstdc++} {
-        depends_lib-append port:gcc6
 
         patchfiles-append 9001-macports-libstdcxx.diff
 
         post-patch {
-            reinplace "s|@@MACPORTS_GCC_INCLUDE_DIR@@|${prefix}/include/gcc6/c++|g" \
+            reinplace "s|@@MACPORTS_GCC_INCLUDE_DIR@@|${prefix}/include/gcc/c++|g" \
                 ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
             reinplace "s|@@MACPORTS_HOST_NAME@@|${build_arch}-apple-darwin${os.major}|g" \
                 ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
             reinplace "s|@@MACPORTS_libstdc++@@|${prefix}/lib/libgcc/libstdc++.6.dylib|g" \
                 ${worksrcpath}/tools/clang/lib/Driver/ToolChains.cpp
+
+            # GCC was built for ${build_arch}-apple-darwin${os.major}
+            # if GCC was also built universal, it has an extra include directory
+            # if ${build_arch} is 32-bit, there is an extra 64-bit subdirectory
+            # if ${build_arch} is 64-bit, there is an extra 32-bit subdirectory
+            # MacPorts GCC can not compile across platforms
+            switch ${build_arch} {
+                x86_64 {
+                    set gcc_subdirectory_ppc    ""
+                    set gcc_subdirectory_ppc64  "ppc64"
+                    set gcc_subdirectory_i386   "i386"
+                    set gcc_subdirectory_x86_64 ""
+                }
+                i386 {
+                    set gcc_subdirectory_ppc    ""
+                    set gcc_subdirectory_ppc64  "ppc64"
+                    set gcc_subdirectory_i386   ""
+                    set gcc_subdirectory_x86_64 "x86_64"
+                }
+                ppc64 {
+                    set gcc_subdirectory_ppc    "ppc"
+                    set gcc_subdirectory_ppc64  ""
+                    set gcc_subdirectory_i386   ""
+                    set gcc_subdirectory_x86_64 "x86_64"
+                }
+                ppc {
+                    set gcc_subdirectory_ppc    ""
+                    set gcc_subdirectory_ppc64  "ppc64"
+                    set gcc_subdirectory_i386   ""
+                    set gcc_subdirectory_x86_64 "x86_64"
+                }
+            }
+
+            reinplace "s|@@MACPORTS_GCC_SUBDIRECTORY_x86_64@@|${gcc_subdirectory_x86_64}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_GCC_SUBDIRECTORY_i386@@|${gcc_subdirectory_i386}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_GCC_SUBDIRECTORY_ppc64@@|${gcc_subdirectory_ppc64}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
+            reinplace "s|@@MACPORTS_GCC_SUBDIRECTORY_ppc@@|${gcc_subdirectory_ppc}|g" \
+                ${worksrcpath}/tools/clang/lib/Frontend/InitHeaderSearch.cpp
         }
     }
+    default_variants +libstdcxx
 
-    default_variants +forcelibcxx
+# change default stdlib added if no -std=libxxx on build line
+    if { ${configure.cxx_stdlib} eq "libc++" } {
+        default_variants-append +forcelibcxx
+    }
+    
     variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
         #patch clang to always default to -stdlib=libc++, even on <10.9
-        patchfiles-append 999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
+        patchfiles-append 9999-patch-clang-3.9-Toolchains-default-always-libcxx.diff
     }
+
 
     post-patch {
         reinplace "s|@@PREFIX@@|${prefix}|" \

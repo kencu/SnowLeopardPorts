@@ -244,7 +244,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
     # CMAKE_LINKER is used to determine the value for HOST_LINK_VERSION
     configure.args-append \
         -DCMAKE_LINKER=${prefix}/bin/ld \
-        -DCLANG_INCLUDE_TESTS=ON \
+        -DCLANG_INCLUDE_TESTS=OFF \
         -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
         -DLLVM_BUILD_RUNTIME=ON \
         -DLIBCXX_INSTALL_LIBRARY=OFF
