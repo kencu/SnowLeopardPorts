@@ -1,0 +1,31 @@
+--- lib/string.cpp.old	2017-11-05 11:27:33.000000000 -0800
++++ lib/string.cpp	2017-11-05 11:27:53.000000000 -0800
+@@ -13,6 +13,28 @@
+ 
+ #include <cstdlib>
+ 
++#include <xlocale.h>
++int
++wcscasecmp_l(const wchar_t *s1, const wchar_t *s2, locale_t loc)
++{
++	wchar_t c1, c2;
++
++	for (; *s1; s1++, s2++) {
++		c1 = towlower_l(*s1, loc);
++		c2 = towlower_l(*s2, loc);
++		if (c1 != c2)
++			return ((int)c1 - c2);
++	}
++	return (-*s2);
++}
++
++int
++wcscasecmp(const wchar_t *s1, const wchar_t *s2) {
++	return wcscasecmp_l(s1, s2, 0);
++}
++
++
++
+ static_assert('a' + 25 == 'z', "We only support systems running with an ASCII-based character set. Sorry, no EBCDIC.");
+ 
+ // char may be unsigned, yielding stange results if subtracting characters. To work around it, expect a particular order of characters.
