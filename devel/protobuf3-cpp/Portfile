@@ -1,0 +1,69 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem 1.0
+PortGroup  github 1.0
+
+github.setup    google protobuf 3.4.0 v
+name            protobuf3-cpp
+categories      devel
+maintainers     blair
+license         BSD
+description     Encode data in an efficient yet extensible format.
+conflicts       protobuf-cpp
+
+long_description \
+                Google Protocol Buffers are a flexible, efficient, \
+                automated mechanism for serializing structured data -- \
+                think XML, but smaller, faster, and simpler.  You \
+                define how you want your data to be structured once, \
+                then you can use special generated source code to \
+                easily write and read your structured data to and from \
+                a variety of data streams and using a variety of \
+                languages.  You can even update your data structure \
+                without breaking deployed programs that are compiled \
+                against the "old" format.  You specify how you want \
+                the information you're serializing to be structured by \
+                defining protocol buffer message types in .proto \
+                files.  Each protocol buffer message is a small \
+                logical record of information, containing a series of \
+                name-value pairs.
+
+github.tarball_from releases
+distname        protobuf-cpp-${version}
+worksrcdir      protobuf-${version}
+
+checksums       rmd160  c1858337db5fc683c53525ddcb349a54cc07d1fb \
+                sha256  71434f6f836a1e479c44008bb033b2a8b2560ff539374dcdefb126be739e1635
+
+platforms       darwin
+
+depends_lib     port:zlib
+
+configure.cflags-append     -g
+configure.cppflags-append   -g
+
+post-destroot {
+    set docdir ${destroot}${prefix}/share/doc/${name}
+
+    xinstall -d -m 755 ${docdir}
+
+    foreach f {CHANGES.txt CONTRIBUTORS.txt LICENSE README.md editors examples} {
+        file copy ${worksrcpath}/${f} ${docdir}
+    }
+}
+
+test.run    yes
+test.target check
+
+
+
+# older systems compatability fixes
+# tweak thread-local-storage needs on older systems
+# https://github.com/google/protobuf/blob/master/src/google/protobuf/stubs/platform_macros.h
+# build fails with older gcc versions (4.2 fails) so force to newer compiler
+if {${os.platform} eq "darwin" && ${os.major} < 11} {
+    PortGroup cxx11 1.1
+    if {[string match *clang* ${configure.cxx}]} {
+        configure.cppflags-append  -DGOOGLE_PROTOBUF_NO_THREADLOCAL
+    }
+}
