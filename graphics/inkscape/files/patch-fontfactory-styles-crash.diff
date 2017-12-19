@@ -1,0 +1,98 @@
+Upstream-Status: Pending, patch based on https://bazaar.launchpad.net/~inkscape.dev/inkscape/trunk/revision/15097 with additional null-checks for familyUIName and styleUIName
+
+=== modified file 'src/libnrtype/FontFactory.cpp'
+--- src/libnrtype/FontFactory.cpp	2016-08-30 11:38:29 +0000
++++ src/libnrtype/FontFactory.cpp	2016-09-01 12:02:12 +0000
+@@ -295,6 +295,7 @@
+         const char* displayName = pango_font_family_get_name(families[currentFamily]);
+         
+         if (displayName == 0 || *displayName == '\0') {
++            std::cerr << "font_factory::GetUIFamilies: Missing displayName! " << std::endl;
+             continue;
+         }
+         sorted.push_back(std::make_pair(families[currentFamily], displayName));
+@@ -313,6 +314,10 @@
+     // Gather the styles for this family
+     PangoFontFace** faces = NULL;
+     int numFaces = 0;
++    if (in == NULL) {
++        std::cerr << "font_factory::GetUIStyles(): PangoFontFamily is NULL" << std::endl;
++        return ret;
++    }
+     pango_font_family_list_faces(in, &faces, &numFaces);
+ 
+     for (int currentFace = 0; currentFace < numFaces; currentFace++) {
+@@ -322,6 +327,7 @@
+         const gchar* displayName = pango_font_face_get_face_name(faces[currentFace]);
+         // std::cout << "Display Name: " << displayName << std::endl;
+         if (displayName == NULL || *displayName == '\0') {
++            std::cerr << "font_factory::GetUIStyles: Missing displayName! " << std::endl;
+             continue;
+         }
+
+@@ -326,6 +332,10 @@
+             Glib::ustring familyUIName = GetUIFamilyString(faceDescr);
+             Glib::ustring styleUIName = GetUIStyleString(faceDescr);
+             // std::cout << familyUIName << "  " << styleUIName << "  " << displayName << std::endl;
++            if (familyUIName == NULL || styleUIName == NULL) {
++                std::cerr << "font_factory::GetUIStyles: Missing familyUIName or styleUIName!" << std::endl;
++                continue;
++            }
+             // Disable synthesized (faux) font faces except for CSS generic faces
+             if (pango_font_face_is_synthesized(faces[currentFace]) ) {
+                 if (familyUIName.compare( "sans-serif" ) != 0 &&
+=== modified file 'src/libnrtype/font-lister.cpp'
+--- src/libnrtype/font-lister.cpp	2016-07-14 11:17:21 +0000
++++ src/libnrtype/font-lister.cpp	2016-09-01 12:02:12 +0000
+@@ -135,6 +135,8 @@
+     if (!row[FontList.styles]) {
+         if (row[FontList.pango_family]) {
+             row[FontList.styles] = font_factory::Default()->GetUIStyles(row[FontList.pango_family]);
++        } else {
++            row[FontList.styles] = default_styles;
+         }
+     }
+ }
+@@ -177,6 +179,7 @@
+     (*treeModelIter)[FontList.family] = new_family;
+     (*treeModelIter)[FontList.styles] = styles;
+     (*treeModelIter)[FontList.onSystem] = false;
++    (*treeModelIter)[FontList.pango_family] = NULL;
+ }
+ 
+ void FontLister::update_font_list(SPDocument *document)
+@@ -256,7 +259,8 @@
+         Gtk::TreeModel::iterator treeModelIter = font_list_store->prepend();
+         (*treeModelIter)[FontList.family] = reinterpret_cast<const char *>(g_strdup((*i).c_str()));
+         (*treeModelIter)[FontList.styles] = styles;
+-        (*treeModelIter)[FontList.onSystem] = false;
++        (*treeModelIter)[FontList.onSystem] = false;    // false if document font
++        (*treeModelIter)[FontList.pango_family] = NULL; // CHECK ME (set to pango_family if on system?)
+ 
+     }
+ 
+@@ -993,7 +997,7 @@
+     }
+     catch (...)
+     {
+-        //std::cout << "  ERROR: can't find family: " << family << std::endl;
++        std::cerr << "FontLister::get_best_style_match(): can't find family: " << family << std::endl;
+         return (target_style);
+     }
+ 
+@@ -1002,10 +1006,12 @@
+ 
+     //font_description_dump( target );
+ 
+-    if (!row[FontList.styles]) {
++    GList *styles = default_styles;
++    if (row[FontList.onSystem] && !row[FontList.styles]) {
+         row[FontList.styles] = font_factory::Default()->GetUIStyles(row[FontList.pango_family]);
++        styles = row[FontList.styles];
+     }
+-    GList *styles = row[FontList.styles];
++
+     for (GList *l = styles; l; l = l->next) {
+         Glib::ustring fontspec = family + ", " + ((StyleNames *)l->data)->CssName;
+         PangoFontDescription *candidate = pango_font_description_from_string(fontspec.c_str());
+
