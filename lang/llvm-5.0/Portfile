@@ -626,8 +626,13 @@ if {${subport} eq "llvm-${llvm_version}"} {
     
     
     # KEN -- these should not interfere
-
+    default_variants-append +forcetls
     default_variants-append +forcelibcxx
+
+    variant forcetls description {forces TLS on all systems}  {
+        #patch clang to always default to supporting TLS, even on <10.7
+        patchfiles-append 9998-patch-tools-clang-lib-basic-targets-force-tls.diff
+    }
 
     variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
         #patch clang to always default to -stdlib=libc++, even on <10.9

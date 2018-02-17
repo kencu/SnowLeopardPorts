@@ -1,0 +1,25 @@
+--- a/tools/clang/lib/Basic/Targets.cpp.orig	2018-02-16 15:36:33.000000000 -0800
++++ b/tools/clang/lib/Basic/Targets.cpp	2018-02-16 15:37:56.000000000 -0800
+@@ -264,7 +264,7 @@
+     this->TLSSupported = false;
+ 
+     if (Triple.isMacOSX())
+-      this->TLSSupported = !Triple.isMacOSXVersionLT(10, 7);
++      this->TLSSupported = !Triple.isMacOSXVersionLT(10, 4);
+     else if (Triple.isiOS()) {
+       // 64-bit iOS supported it from 8 onwards, 32-bit from 9 onwards.
+       if (Triple.getArch() == llvm::Triple::x86_64 ||
+--- a/tools/clang/lib/Driver/ToolChains/Clang.cpp.orig	2018-02-16 18:27:42.000000000 -0800
++++ b/tools/clang/lib/Driver/ToolChains/Clang.cpp	2018-02-16 18:31:44.000000000 -0800
+@@ -3209,9 +3209,9 @@
+   Args.AddLastArg(CmdArgs, options::OPT_fheinous_gnu_extensions);
+   Args.AddLastArg(CmdArgs, options::OPT_fno_operator_names);
+   // Emulated TLS is enabled by default on Android and OpenBSD, and can be enabled
+-  // manually with -femulated-tls.
++  // manually with -femulated-tls. Also default on Darwin < 10.7
+   bool EmulatedTLSDefault = Triple.isAndroid() || Triple.isOSOpenBSD() ||
+-                            Triple.isWindowsCygwinEnvironment();
++     Triple.isMacOSXVersionLT(10, 7) || Triple.isWindowsCygwinEnvironment();
+   if (Args.hasFlag(options::OPT_femulated_tls, options::OPT_fno_emulated_tls,
+                    EmulatedTLSDefault))
+     CmdArgs.push_back("-femulated-tls");
