@@ -626,7 +626,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
     
     
     # KEN -- these should not interfere
-    default_variants-append +forcetls
+    # default_variants-append +forcetls
     default_variants-append +forcelibcxx
 
     variant forcetls description {forces TLS on all systems}  {
