@@ -1,0 +1,12 @@
+--- llvm-5.0.1.src/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp.orig	2018-02-20 12:10:59.000000000 -0800
++++ llvm-5.0.1.src/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp	2018-02-20 12:17:47.000000000 -0800
+@@ -2163,7 +2163,8 @@
+   const char *Name = "__cxa_atexit";
+   if (TLS) {
+     const llvm::Triple &T = CGF.getTarget().getTriple();
+-    Name = T.isOSDarwin() ?  "_tlv_atexit" : "__cxa_thread_atexit";
++    // Darwin 10.7+ has _tlv_atexit
++    Name = (T.isOSDarwin() && !T.isMacOSXVersionLT(10, 7)) ?  "_tlv_atexit" : "__cxa_thread_atexit";
+   }
+ 
+   // We're assuming that the destructor function is something we can

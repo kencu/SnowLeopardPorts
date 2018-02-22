@@ -632,6 +632,7 @@ if {${subport} eq "llvm-${llvm_version}"} {
     variant forcetls description {forces TLS on all systems}  {
         #patch clang to always default to supporting TLS, even on <10.7
         patchfiles-append 9998-patch-tools-clang-lib-basic-targets-force-tls.diff
+        patchfiles-append 9998-patch-tools-clang-lib-codegen-itanium-cxa-atexit.diff
     }
 
     variant forcelibcxx description {forces -stdlib=libc++ on all systems}  {
