@@ -1,0 +1,58 @@
+# $Id$
+
+PortSystem              1.0
+PortGroup               xcode 1.0
+
+name                    SIDPLAY
+version                 4.1.4
+categories              aqua audio multimedia
+license                 GPL-2+
+platforms               darwin
+# bundled Growl and Sparkle binary frameworks are not 64-bit
+supported_archs         i386
+maintainers             nomaintainer
+
+description             C64 music player for the Mac
+
+long_description        SIDPLAY is a Commodore 64 music player. It emulates \
+                        the sound chip and other internals of the Commodore 64 \
+                        home computer to play back music that was originally \
+                        written on it. The sound chip of the C64 is called the \
+                        "Sound Interface Device" or SID, and therefore this \
+                        music is known as SID music. The SID chip is basically \
+                        a three voice synthesizer on a chip. The unusual \
+                        combination of digital and analogue circuitry is the \
+                        reason for its distinctive sound.
+
+homepage                http://www.sidmusic.org/sidplay/mac/
+master_sites            http://www.twinbirds.com/sidplay/
+
+distname                sidplay4-source
+dist_subdir             ${name}/${version}
+use_zip                 yes
+
+checksums               rmd160  a276660f4ea152750fd8f6a23e30e1ed94292506 \
+                        sha256  a10d9cbf8d7a927c81b884012ac7da68c135022471457187aaf7c863785b52fa
+
+# strip out hard-coded gcc-4.2 reference
+patchfiles-append       patch-pbxproj-gcc-version.diff
+
+universal_variant       no
+# use this for now -- builds with llvm-gcc-4.2 and that's the only option
+configure.cxx_stdlib    libstdc++
+
+xcode.project           ${name}.xcodeproj
+xcode.configuration     Release
+
+# this almost works. seems to bog down when trying to use the precompiled headers 
+# clang: error: unknown argument: '-fobjc-gc-only'
+# xcode.build.settings    GCC_VERSION=com.apple.compilers.llvm.clang.1_0
+# xcode.destroot.settings {*}xcode.build.settings
+
+post-destroot {
+    delete ${destroot}${applications_dir}/SIDmusic.mdimporter
+}
+
+livecheck.type          regex
+livecheck.url           ${homepage}
+livecheck.regex         ">Download SIDPLAY (.*?)<"
