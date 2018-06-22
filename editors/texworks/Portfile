@@ -33,7 +33,6 @@ depends_lib         port:fontconfig \
 # texlive-bin is needed for synctex (but maybe there is some workaround?)
 # not sure why zlib is needed
 
-
 configure.args-append       -DWITH_LUA=ON \
                             -DWITH_MUPDF=OFF \
                             -DWITH_POPPLER=ON \
