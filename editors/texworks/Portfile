@@ -3,6 +3,7 @@
 PortSystem          1.0
 PortGroup           cmake 1.1
 PortGroup           github 1.0
+PortGroup           cxx11 1.1
 
 # github.setup      TeXworks texworks 0.6.2 release-
 github.setup        TeXworks texworks 70cafa3ba33e01084a6562df0303ed9bb9dab2b1
