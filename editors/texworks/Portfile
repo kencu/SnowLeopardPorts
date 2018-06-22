@@ -41,6 +41,7 @@ configure.args-append       -DWITH_LUA=ON \
 
 variant qt4 description {Build against Qt 4 using poppler 61.1} {
     PortGroup               qt4 1.0
+    depends_lib-delete      port:poppler
     depends_lib-append      port:poppler-qt4-mac
     configure.args-append   -DDESIRED_QT_VERSION=4
     configure.cxxflags-append -std=c++11
