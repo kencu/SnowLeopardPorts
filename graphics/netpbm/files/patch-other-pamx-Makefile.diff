@@ -1,0 +1,12 @@
+--- other/pamx/Makefile.orig	2016-12-25 11:36:41.000000000 -0600
++++ other/pamx/Makefile	2017-01-12 02:35:01.000000000 -0600
+@@ -9,7 +9,8 @@
+ 
+ EXTERN_INCLUDE =
+ 
+-ifeq ($(shell $(PKG_CONFIG) x11 --modversion --silence-errors),)
++ifeq ($(WANT_X11),N)
++else ifeq ($(shell $(PKG_CONFIG) x11 --modversion --silence-errors),)
+   # Pkg-config has never heard of X11, or doesn't even exist
+ 
+   ifneq ($(X11LIB),NONE)
