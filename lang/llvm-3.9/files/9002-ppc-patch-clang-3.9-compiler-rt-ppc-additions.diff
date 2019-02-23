@@ -1,0 +1,296 @@
+From 926c259ac8366d9cece624e5523fdd577508b269 Mon Sep 17 00:00:00 2001
+From: Iain Sandoe <iain@codesourcery.com>
+Date: Fri, 29 Apr 2016 12:38:07 +0100
+Subject: [PATCH] [compiler-rt,cmake] Main chunks to add PPC to compiler-rt
+
+---
+ projects/compiler-rt/cmake/config-ix.cmake                  | 19 +++--
+ projects/compiler-rt/lib/builtins/CMakeLists.txt            | 16 ++++
+ .../lib/builtins/Darwin-excludes/10.4-ppc.txt      | 88 ++++++++++++++++++++++
+ .../lib/builtins/Darwin-excludes/10.5-ppc.txt      | 88 ++++++++++++++++++++++
+ 4 files changed, 206 insertions(+), 5 deletions(-)
+ create mode 100644 compiler-rt/lib/builtins/Darwin-excludes/10.4-ppc.txt
+ create mode 100644 compiler-rt/lib/builtins/Darwin-excludes/10.5-ppc.txt
+
+diff --git a/projects/compiler-rt/cmake/config-ix.cmake b/projects/compiler-rt/cmake/config-ix.cmake
+index b3a0a8d..4655980 100644
+--- a/projects/compiler-rt/cmake/config-ix.cmake
++++ b/projects/compiler-rt/cmake/config-ix.cmake
+@@ -150,6 +150,8 @@ macro(detect_target_arch)
+   check_symbol_exists(__i386__ "" __I386)
+   check_symbol_exists(__mips__ "" __MIPS)
+   check_symbol_exists(__mips64__ "" __MIPS64)
++  check_symbol_exists(__ppc__ "" __PPC)
++  check_symbol_exists(__ppc64__ "" __PPC64)
+   check_symbol_exists(__wasm32__ "" __WEBASSEMBLY32)
+   check_symbol_exists(__wasm64__ "" __WEBASSEMBLY64)
+   if(__ARM)
+@@ -204,7 +206,10 @@ elseif(NOT APPLE) # Supported archs for Apple platforms are generated later
+   elseif("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "powerpc")
+     TEST_BIG_ENDIAN(HOST_IS_BIG_ENDIAN)
+     if(HOST_IS_BIG_ENDIAN)
++      test_target_arch(ppc "" "-m32")
++      if(NOT APPLE)
+       test_target_arch(powerpc64 "" "-m64")
++      endif()
+     else()
+       test_target_arch(powerpc64le "" "-m64")
+     endif()
+@@ -269,7 +274,6 @@ set(X86 i386 i686)
+ set(X86_64 x86_64)
+ set(MIPS32 mips mipsel)
+ set(MIPS64 mips64 mips64el)
+-set(PPC64 powerpc64 powerpc64le)
+ set(WASM32 wasm32)
+ set(WASM64 wasm64)
+ 
+@@ -277,14 +281,19 @@ if(APPLE)
+   set(ARM64 arm64)
+   set(ARM32 armv7 armv7s)
+   set(X86_64 x86_64 x86_64h)
++  set(PPC ppc)
++  set(PPC64 ppc64)
++else()
++  set(PPC powerpc)
++  set(PPC64 powerpc64 powerpc64le)
+ endif()
+ 
+ set(ALL_BUILTIN_SUPPORTED_ARCH ${X86} ${X86_64} ${ARM32} ${ARM64}
+-    ${MIPS32} ${MIPS64} ${WASM32} ${WASM64})
++    ${MIPS32} ${MIPS64} ${PPC} ${WASM32} ${WASM64})
+ set(ALL_SANITIZER_COMMON_SUPPORTED_ARCH ${X86} ${X86_64} ${PPC64}
+-    ${ARM32} ${ARM64} ${MIPS32} ${MIPS64})
++    ${ARM32} ${ARM64} ${MIPS32} ${MIPS64} ${PPC})
+ set(ALL_ASAN_SUPPORTED_ARCH ${X86} ${X86_64} ${ARM32} ${ARM64}
+-    ${MIPS32} ${MIPS64} ${PPC64})
++    ${MIPS32} ${MIPS64} ${PPC64} ${PPC})
+ set(ALL_DFSAN_SUPPORTED_ARCH ${X86_64} ${MIPS64} ${ARM64})
+ set(ALL_LSAN_SUPPORTED_ARCH ${X86_64} ${MIPS64} ${ARM64})
+ set(ALL_MSAN_SUPPORTED_ARCH ${X86_64} ${MIPS64} ${ARM64})
+@@ -292,7 +301,7 @@ set(ALL_PROFILE_SUPPORTED_ARCH ${X86} ${X86_64} ${ARM32} ${ARM64} ${PPC64}
+     ${MIPS32} ${MIPS64})
+ set(ALL_TSAN_SUPPORTED_ARCH ${X86_64} ${MIPS64} ${ARM64} ${PPC64})
+ set(ALL_UBSAN_SUPPORTED_ARCH ${X86} ${X86_64} ${ARM32} ${ARM64}
+-    ${MIPS32} ${MIPS64} ${PPC64})
++    ${MIPS32} ${MIPS64} ${PPC64} ${PPC})
+ set(ALL_SAFESTACK_SUPPORTED_ARCH ${X86} ${X86_64} ${ARM64} ${MIPS32} ${MIPS64})
+ set(ALL_CFI_SUPPORTED_ARCH ${X86} ${X86_64} ${MIPS64})
+ 
+diff --git a/projects/compiler-rt/lib/builtins/CMakeLists.txt b/projects/compiler-rt/lib/builtins/CMakeLists.txt
+index 7ac4eea..1d604d6 100644
+--- a/projects/compiler-rt/lib/builtins/CMakeLists.txt
++++ b/projects/compiler-rt/lib/builtins/CMakeLists.txt
+@@ -348,6 +348,22 @@ set(armv6m_SOURCES ${GENERIC_SOURCES})
+ set(armv7m_SOURCES ${arm_SOURCES})
+ set(armv7em_SOURCES ${arm_SOURCES})
+ 
++set(ppc_SOURCES
++  ppc/atomic8.c
++  ppc/divtc3.c
++  ppc/fixtfdi.c
++  ppc/fixunstfdi.c
++  ppc/floatditf.c
++  ppc/floatunditf.c
++  ppc/gcc_qadd.c
++  ppc/gcc_qdiv.c
++  ppc/gcc_qmul.c
++  ppc/gcc_qsub.c
++  ppc/multc3.c
++  ppc/restFP.S
++  ppc/saveFP.S
++  ${GENERIC_SOURCES})
++
+ set(mips_SOURCES ${GENERIC_SOURCES})
+ set(mipsel_SOURCES ${mips_SOURCES})
+ set(mips64_SOURCES ${mips_SOURCES})
+diff --git a/projects/compiler-rt/lib/builtins/Darwin-excludes/10.4-ppc.txt b/projects/compiler-rt/lib/builtins/Darwin-excludes/10.4-ppc.txt
+new file mode 100644
+index 0000000..7c9d9c1
+--- /dev/null
++++ b/projects/compiler-rt/lib/builtins/Darwin-excludes/10.4-ppc.txt
+@@ -0,0 +1,88 @@
++apple_versioning
++absvdi2
++absvsi2
++adddf3
++addsf3
++addvdi3
++addvsi3
++ashldi3
++ashrdi3
++clear_cache
++clzdi2
++clzsi2
++cmpdi2
++ctzdi2
++ctzsi2
++divdc3
++divdf3
++divdi3
++divtc3
++divmoddi4
++divmodsi4
++divsc3
++divsf3
++divsi3
++divxc3
++enable_execute_stack
++comparedf2
++comparesf2
++extendhfsf2
++extendsfdf2
++ffsdi2
++fixdfdi
++fixdfsi
++fixsfdi
++fixsfsi
++fixunsdfdi
++fixunsdfsi
++fixunssfdi
++fixunssfsi
++fixunsxfdi
++fixunsxfsi
++fixxfdi
++floatdidf
++floatdisf
++floatdixf
++floatsidf
++floatsisf
++floatunsidf
++floatunsisf
++gcc_personality_v0
++lshrdi3
++moddi3
++modsi3
++muldc3
++muldf3
++muldi3
++multc3
++mulsc3
++mulsf3
++mulvdi3
++mulvsi3
++mulxc3
++negdf2
++negdi2
++negsf2
++negvdi2
++negvsi2
++paritydi2
++paritysi2
++popcountdi2
++popcountsi2
++powidf2
++powisf2
++powixf2
++subdf3
++subsf3
++subvdi3
++subvsi3
++truncdfhf2
++truncdfsf2
++truncsfhf2
++ucmpdi2
++udivdi3
++udivmoddi4
++udivmodsi4
++udivsi3
++umoddi3
++umodsi3
+diff --git a/projects/compiler-rt/lib/builtins/Darwin-excludes/10.5-ppc.txt b/projects/compiler-rt/lib/builtins/Darwin-excludes/10.5-ppc.txt
+new file mode 100644
+index 0000000..7c9d9c1
+--- /dev/null
++++ b/projects/compiler-rt/lib/builtins/Darwin-excludes/10.5-ppc.txt
+@@ -0,0 +1,88 @@
++apple_versioning
++absvdi2
++absvsi2
++adddf3
++addsf3
++addvdi3
++addvsi3
++ashldi3
++ashrdi3
++clear_cache
++clzdi2
++clzsi2
++cmpdi2
++ctzdi2
++ctzsi2
++divdc3
++divdf3
++divdi3
++divtc3
++divmoddi4
++divmodsi4
++divsc3
++divsf3
++divsi3
++divxc3
++enable_execute_stack
++comparedf2
++comparesf2
++extendhfsf2
++extendsfdf2
++ffsdi2
++fixdfdi
++fixdfsi
++fixsfdi
++fixsfsi
++fixunsdfdi
++fixunsdfsi
++fixunssfdi
++fixunssfsi
++fixunsxfdi
++fixunsxfsi
++fixxfdi
++floatdidf
++floatdisf
++floatdixf
++floatsidf
++floatsisf
++floatunsidf
++floatunsisf
++gcc_personality_v0
++lshrdi3
++moddi3
++modsi3
++muldc3
++muldf3
++muldi3
++multc3
++mulsc3
++mulsf3
++mulvdi3
++mulvsi3
++mulxc3
++negdf2
++negdi2
++negsf2
++negvdi2
++negvsi2
++paritydi2
++paritysi2
++popcountdi2
++popcountsi2
++powidf2
++powisf2
++powixf2
++subdf3
++subsf3
++subvdi3
++subvsi3
++truncdfhf2
++truncdfsf2
++truncsfhf2
++ucmpdi2
++udivdi3
++udivmoddi4
++udivmodsi4
++udivsi3
++umoddi3
++umodsi3
+-- 
+2.8.1
+
