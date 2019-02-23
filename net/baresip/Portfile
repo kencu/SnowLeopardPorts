@@ -51,3 +51,7 @@ if {[variant_isset universal]} {
     build.env-append    CC='${configure.cc} ${configure.cc_archflags}'
     destroot.env-append CC='${configure.cc} ${configure.cc_archflags}'
 }
+
+
+# notes -- at present, baresip 0.60 does not build due to changes in API
+# modules/qtcapture/qtcapture.m:260:18: error: too few arguments to function call, expected 3, have 2
