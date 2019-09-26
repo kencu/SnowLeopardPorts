@@ -6,7 +6,7 @@
 PortSystem              1.0
 
 name                    macvim-legacy
-version                 7.3.531_Snapshot_64_for_10.6
+version                 7.4.22_Snapshot_71_for_10.6
 categories              editors
 license                 Vim GPL-2+
 platforms               darwin
@@ -22,20 +22,28 @@ long_description \
                         the last working version of a pre-built binary.
 
 # there are mirrors forming up -- this may be the source code for building it
-#https://github.com/macvim-dev/macvim/archive/snapshot-64.tar.gz
-#https://github.com/eee19/macvim/archive/snapshot-64.tar.gz
+# https://github.com/macvim-dev/macvim/archive/snapshot-64.tar.gz
+# https://github.com/eee19/macvim/archive/snapshot-64.tar.gz
 # looks interesting too https://github.com/b4winckler/macvim/releases/download/snapshot-71/MacVim-snapshot-71-Snow-Leopard.tbz
-# 
 
-distfiles               MacVim-snapshot-64-OSX-10_6.tbz
+
+# upstream is gone
+#master_sites            https://cloud.github.com/downloads/alexlovelltroy/macvim/
+#distfiles               MacVim-snapshot-64-OSX-10_6.tbz
+#set worksrcdir          MacVim-snapshot-64-OSX-10_6
+
+
 homepage                https://macvim-dev.github.io/macvim/
-master_sites            https://cloud.github.com/downloads/alexlovelltroy/macvim/
-checksums               sha256  b478b26e3983e7fa73ad540c5361895432917535e9136d907ae68a06bcb26614 \
-                        rmd160  829cd52653a255a4e82b31a8a82ba57efef58c0b
-                        
+master_sites            https://github.com/b4winckler/macvim/releases/download/snapshot-71/
+distfiles               MacVim-snapshot-71-Snow-Leopard.tbz
+
+checksums           rmd160  bfe374e317b0b7726c4aded405f3bb978d2af985 \
+                    sha256  cdc1c79b9a5bb5203c9c0814289612027c51a99a77366056f770a8d4f95cae82 \
+                    size    7473914
+
 use_bzip2               yes
 
-set worksrcdir          MacVim-snapshot-64-OSX-10_6
+set worksrcdir          MacVim-snapshot-71-Snow-Leopard
 set sourcedir           ${worksrcpath}
 
 post-extract {
