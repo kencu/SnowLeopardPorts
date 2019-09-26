@@ -5,11 +5,13 @@
 
 PortSystem              1.0
 
-name                    macvim
+name                    macvim-legacy
 version                 7.3.531_Snapshot_64_for_10.6
 categories              editors
 license                 Vim GPL-2+
 platforms               darwin
+
+conflicts               macvim
 
 maintainers             nomaintainer
 description             MacVim is a GUI version of vim for Mac OS X
@@ -18,6 +20,12 @@ long_description \
                         better and integrate more seamlessly with the Mac than vim-app. As the \
                         current version of MacVim will not build or run on 10.6, this port installs \
                         the last working version of a pre-built binary.
+
+# there are mirrors forming up -- this may be the source code for building it
+#https://github.com/macvim-dev/macvim/archive/snapshot-64.tar.gz
+#https://github.com/eee19/macvim/archive/snapshot-64.tar.gz
+# looks interesting too https://github.com/b4winckler/macvim/releases/download/snapshot-71/MacVim-snapshot-71-Snow-Leopard.tbz
+# 
 
 distfiles               MacVim-snapshot-64-OSX-10_6.tbz
 homepage                https://macvim-dev.github.io/macvim/
