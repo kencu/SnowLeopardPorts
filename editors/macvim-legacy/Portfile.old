@@ -1,0 +1,61 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# this software is not avaialable in source form from the authours as of 20161207
+# the binary is available for PPC, i386, and x86_64, so we'll have to use that
+# it is linked to libstdc++; there is nothing we can do about that at present
+
+PortSystem              1.0
+
+name                    macvim-legacy
+version                 7.4.22_Snapshot_71_for_10.6
+categories              editors
+license                 Vim GPL-2+
+platforms               darwin
+
+conflicts               macvim
+
+maintainers             nomaintainer
+description             MacVim is a GUI version of vim for Mac OS X
+long_description \
+                        MacVim is a port of the text editor Vim to Mac OS X that is meant to look \
+                        better and integrate more seamlessly with the Mac than vim-app. As the \
+                        current version of MacVim will not build or run on 10.6, this port installs \
+                        the last working version of a pre-built binary.
+
+# there are mirrors forming up -- this may be the source code for building it
+# https://github.com/macvim-dev/macvim/archive/snapshot-64.tar.gz
+# https://github.com/eee19/macvim/archive/snapshot-64.tar.gz
+# looks interesting too https://github.com/b4winckler/macvim/releases/download/snapshot-71/MacVim-snapshot-71-Snow-Leopard.tbz
+
+
+# upstream is gone
+#master_sites            https://cloud.github.com/downloads/alexlovelltroy/macvim/
+#distfiles               MacVim-snapshot-64-OSX-10_6.tbz
+#set worksrcdir          MacVim-snapshot-64-OSX-10_6
+
+
+homepage                https://macvim-dev.github.io/macvim/
+master_sites            https://github.com/b4winckler/macvim/releases/download/snapshot-71/
+distfiles               MacVim-snapshot-71-Snow-Leopard.tbz
+
+checksums           rmd160  bfe374e317b0b7726c4aded405f3bb978d2af985 \
+                    sha256  cdc1c79b9a5bb5203c9c0814289612027c51a99a77366056f770a8d4f95cae82 \
+                    size    7473914
+
+use_bzip2               yes
+
+set worksrcdir          MacVim-snapshot-71-Snow-Leopard
+set sourcedir           ${worksrcpath}
+
+post-extract {
+    # add macports applications directory to mvim search path
+    reinplace "s|/Applications/Utilities/vim|/Applications/Utilities/vim ${applications_dir}|g" ${worksrcpath}/mvim
+}
+
+# we are just installing binaries, there is no configure or build phase in this port
+use_configure           no
+build {}
+
+destroot {
+    copy ${sourcedir}/MacVim.app ${destroot}${applications_dir}/
+    copy ${sourcedir}/mvim ${destroot}${prefix}/bin/
+}
