@@ -6,7 +6,7 @@ PortGroup           cmake 1.1
 PortGroup           conflicts_build 1.0
 PortGroup           qt5 1.0
 
-github.setup        Sigil-Ebook Sigil 0.7.0
+github.setup        Sigil-Ebook Sigil 0.7.1
 
 name                sigil
 conflicts           tidy
@@ -23,9 +23,9 @@ long_description    Sigil is a multi-platform WYSIWYG ebook editor. It is \
 
 configure.args-append -DFORCE_BUNDLED_COPIES=1 -DCMAKE_BUILD_TYPE=Release
 
-checksums           rmd160  8be530eb002cbde7b00bc68adbdeb28ec5b0db5b \
-                    sha256  cb4c7c1d79b6b6feca7c51e9ff38733f949ee1b73dbb79138f7d13d189fde4e1 \
-                    size    9930080
+checksums           rmd160  0050312cb3dd2e818d1d7dbc98ee0991380a68ac \
+                    sha256  e8c11b789d76e93c5a44d6b7b68c819dfe46f827a7a7376dcbcf9d05d34df7cf \
+                    size    9925376
 
 
 #depends_lib-append  port:boost \
