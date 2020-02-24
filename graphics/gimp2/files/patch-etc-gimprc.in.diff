@@ -1,0 +1,24 @@
+--- etc/gimprc.in.orig	2019-10-26 12:46:48.000000000 -0700
++++ etc/gimprc.in	2019-11-02 12:31:40.000000000 -0700
+@@ -785,11 +785,13 @@
+ # string value.
+ # 
+ # (help-locales "")
++(help-locales "en")
+ 
+ # Sets the browser used by the help system.  Possible values are gimp and
+ # web-browser.
+ # 
+ # (help-browser gimp)
++(help-browser web-browser)
+ 
+ # When enabled, a search of actions will also return inactive actions. 
+ # Possible values are yes and no.
+@@ -816,6 +818,7 @@
+ # windows.  Possible values are normal, utility and keep-above.
+ # 
+ # (dock-window-hint utility)
++(dock-window-hint normal)
+ 
+ # Sets the handedness for cursor positioning.  Possible values are left and
+ # right.
