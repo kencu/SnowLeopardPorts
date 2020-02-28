@@ -10,6 +10,8 @@ PortSystem          1.0
 name                go
 epoch               2
 version             1.11.5
+# this is the newest version that build in this configuration
+# after this we run into the unlinkat issues
 categories          lang
 platforms           darwin freebsd linux
 license             BSD
