@@ -9,7 +9,10 @@ PortSystem          1.0
 
 name                go
 epoch               2
-version             1.5.1
+# version             1.9.4
+# version             1.8.3
+# version             1.7.4
+version             1.6.3
 categories          lang
 platforms           darwin freebsd linux
 license             BSD
@@ -32,8 +35,9 @@ master_sites        https://storage.googleapis.com/golang/
 distfiles           ${name}${version}.src.tar.gz
 worksrcdir          ${name}
 
-checksums           rmd160  751d078789bcd6ec0d85e09f5f40d9959877e202 \
-                    sha256  a889873e98d9a72ae396a9b7dd597c29dcd709cafa9097d9c4ba04cff0ec436b
+checksums           rmd160  215142f0c2f67a49fec97056974113caca95672b \
+                    sha256  6326aeed5f86cf18f16d6dc831405614f855e2d416a91fd3fdc334f772345b00 \
+                    size    12617426
 
 depends_build       port:go-1.4
 
@@ -120,3 +124,18 @@ livecheck.regex     {go([0-9.]+)\.src\.tar\.gz}
 # sudo mkdir /opt/local/libexec/llvm-9.0/lib/clang/9.0.1/lib/darwin10.8.0
 # sudo ln -s /opt/local/libexec/llvm-9.0/lib/clang/9.0.1/lib/darwin/libclang_rt.osx.a /opt/local/libexec/llvm-9.0/lib/clang/9.0.1/lib/darwin10.8.0/libclang_rt.builtins-x86_64.a
 
+
+# go 1.7+ fail due to
+# crypto/x509
+#crypto/x509/root_cgo_darwin.go:161:28: warning: implicit declaration of function 'SecCertificateCopyNormalizedSubjectContent' is invalid in C99 [-Wimplicit-function-declaration]
+#crypto/x509/root_cgo_darwin.go:161:14: warning: incompatible integer to pointer conversion initializing 'CFDataRef' (aka 'const struct __CFData *') with an expression of type 'int' [-Wint-conversion]
+#crypto/x509/root_cgo_darwin.go:166:27: warning: implicit declaration of function 'SecCertificateCopyNormalizedIssuerContent' is invalid in C99 [-Wimplicit-function-declaration]
+#crypto/x509/root_cgo_darwin.go:166:14: warning: incompatible integer to pointer conversion initializing 'CFDataRef' (aka 'const struct __CFData *') with an expression of type 'int' [-Wint-conversion]
+#cmd/asm
+# crypto/x509
+#Undefined symbols for architecture x86_64:
+#  "_SecCertificateCopyNormalizedIssuerContent", referenced from:
+#      _FetchPEMRoots in root_cgo_darwin.cgo2.o
+#  "_SecCertificateCopyNormalizedSubjectContent", referenced from:
+#      _FetchPEMRoots in root_cgo_darwin.cgo2.o
+#ld: symbol(s) not found for architecture x86_64
