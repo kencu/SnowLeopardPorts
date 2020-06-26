@@ -1,0 +1,155 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           github          1.0
+PortGroup           select          1.0
+PortGroup           wxWidgets       1.0
+
+# Instead of backports a huge number of patches to support the newer macOS versions,
+# simply fetch a newer version from git (master) until 3.1.1 comes out.
+# This is a development port anyway and generally not used as dependency.
+
+#github.setup       wxWidgets wxWidgets 3.1.0 v
+github.setup        wxWidgets wxWidgets 6d3530a
+version             3.1.0-git-20171103
+livecheck.version   v3.1.0
+name                wxWidgets-3.2
+wxWidgets.use       wxWidgets-3.2
+
+set wxtype          osx_cocoa
+
+set branch          [join [lrange [split ${version} .] 0 1] .]
+
+categories          graphics devel
+platforms           darwin
+license             wxwidgets-3.1
+maintainers         {mojca @mojca} openmaintainer
+
+description         C++ framework for cross-platform GUI development
+long_description    wxWidgets ${branch} is an open-source cross-platform C++ \
+                    GUI framework for Mac OS, Unix, Linux, Windows.
+
+homepage            http://www.wxwidgets.org/
+
+checksums           rmd160  288c38e7c9d0e2f36fa0f8c5d96621be4b4d7e96 \
+                    sha256  a1106035321c91de5c285e46620856d993fe2f851502523abf071948a265d5da
+
+dist_subdir         wxWidgets/${version}
+worksrcdir          ${distname}/build
+patch.dir           ${worksrcpath}/..
+
+set selectdir       ${workpath}/select
+select.group        wxWidgets
+select.file         ${selectdir}/${subport}
+
+depends_lib-append  port:jpeg \
+                    port:tiff \
+                    port:libpng \
+                    port:zlib \
+                    port:libiconv \
+                    port:expat
+
+depends_run         port:wxWidgets-common \
+                    port:wxWidgets_select
+
+patchfiles          patch-configure.diff
+
+post-patch {
+    reinplace "s|@@PREFIX@@|${prefix}|g" ${patch.dir}/configure
+
+    file mkdir ${selectdir}
+    system "echo \"${wxWidgets.wxdir}/wx-config\n${wxWidgets.wxdir}/wxrc-${branch}\" > ${select.file}"
+}
+
+
+configure.cmd       ../configure
+configure.args      --prefix=${wxWidgets.prefix} \
+                    --with-libiconv-prefix=${prefix} \
+                    --with-libjpeg \
+                    --with-libtiff \
+                    --with-libpng \
+                    --with-zlib \
+                    --with-opengl \
+                    --with-cocoa \
+                    --without-sdl \
+                    --enable-aui \
+                    --disable-sdltest \
+                    --enable-display \
+                    --enable-xrc \
+                    --enable-graphics_ctx \
+                    --with-macosx-sdk=no \
+                    --with-macosx-version-min=no \
+                    --disable-compat30
+
+
+######  Ken
+
+platform macosx {
+    if {${os.major} <= 10} {
+        # Build requires at least 10.7.3 SDK, even when targeting 10.6
+        set lion_sdkpath ${developer_dir}/SDKs/MacOSX10.7.sdk
+        if {[file exists $lion_sdkpath]} {
+            configure.sdkroot $lion_sdkpath
+            configure.args-replace --with-macosx-sdk=no --with-macosx-sdk=$lion_sdkpath
+            configure.args-replace --with-macosx-version-min=no --with-macosx-version-min=10.6
+        } else {
+            pre-fetch {
+                error "Building $name @${version} on Mac OS X 10.6 requires the MacOSX10.7.sdk to be present in ${developer_dir}/SDKs/"
+            }
+        }
+    }
+}
+
+# during the test period we could afford to disable compatibility to 3.0
+# to detect the problems earlier
+#
+# for the moment provide a variant to allow testing *with* compatibility turned on
+variant compat30 description {enable wxWidgets 3.0 compatibility (will become default)} {
+    configure.args-replace \
+                    --disable-compat30 \
+                    --enable-compat30
+}
+
+
+# notes:
+#   --enable-unicode (already default)
+#   --enable-cxx11   (figure out how to use this switch)
+
+if {[string match *clang* ${configure.cxx}]} {
+    configure.ldflags-append \
+                    -stdlib=${configure.cxx_stdlib}
+}
+
+post-destroot {
+    set confscript ${wxWidgets.prefix}/lib/wx/config/${wxtype}-unicode-${branch}
+    ln -sf ${confscript} ${destroot}${wxWidgets.prefix}/bin/wx-config
+
+#### KEN
+    # hack the dylib to point towards snowleopard versions of CoreMedia and AVFoundation
+    if {${os.major} <= 10} {
+        system "install_name_tool -change /System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia /System/Library/PrivateFrameworks/CoreMedia.framework/Versions/A/CoreMedia ${destroot}${prefix}/Library/Frameworks/wxWidgets.framework/Versions/wxWidgets/3.1/lib/libwx_osx_cocoau_media-3.1.1.0.0.dylib"
+        system "install_name_tool -change /System/Library/Frameworks/AVFoundation.framework/Versions/A/AVFoundation  /System/Library/PrivateFrameworks/AVFoundationCF.framework/AVFoundationCF ${destroot}${prefix}/Library/Frameworks/wxWidgets.framework/Versions/wxWidgets/3.1/lib/libwx_osx_cocoau_media-3.1.1.0.0.dylib"
+    }
+}
+
+# TODO: --disable-precomp-headers should hopefully no longer be needed (try building wxGTK with universal)
+#       in both 3.0 branch and master
+variant universal {
+    set archs [join ${configure.universal_archs} ,]
+    # --disable-precomp-headers is automatically selected with cocoa, but not with gtk
+    # http://trac.wxwidgets.org/ticket/15454
+    configure.args-append   --enable-universal_binary=${archs} \
+                            --disable-precomp-headers
+}
+
+variant debug description {add debug info to libraries} {
+    configure.args-append   --enable-debug
+}
+
+variant stdlib description {add support for various standard library features} {
+    configure.args-append   --enable-stl \
+                            --enable-std_containers \
+                            --enable-std_iostreams \
+                            --enable-std_string \
+                            --enable-std_string_conv_in_wxstring
+}
