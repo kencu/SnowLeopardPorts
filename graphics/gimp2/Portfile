@@ -93,7 +93,8 @@ compiler.blacklist-append *gcc-3.* *gcc-4.* {clang < 700}
 
 patchfiles          patch-configure.ac.diff \
                     patch-etc-gimprc.in.diff \
-                    patch-quartz-32bit.diff
+                    patch-quartz-32bit.diff \
+                    gimp2-mypaint-brushes-dir.diff
 
 if {${os.platform} eq "darwin" && ${os.major} < 11} {
     # avoid Cursor type conflict between X11 and Quickdraw

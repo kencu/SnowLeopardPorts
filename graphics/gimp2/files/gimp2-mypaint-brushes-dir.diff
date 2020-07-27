@@ -1,0 +1,50 @@
+diff --git app/config/gimpcoreconfig.c app/config/gimpcoreconfig.c
+index c59b778..2643a3e 100644
+--- app/config/gimpcoreconfig.c
++++ app/config/gimpcoreconfig.c
+@@ -50,6 +50,9 @@
+ 
+ #include "gimp-intl.h"
+ 
++#define _QUOTE(x) #x
++#define QUOTE(x) _QUOTE(x)
++
+ 
+ #define GIMP_DEFAULT_BRUSH         "2. Hardness 050"
+ #define GIMP_DEFAULT_DYNAMICS      "Dynamics Off"
+@@ -308,7 +311,7 @@ gimp_core_config_class_init (GimpCoreConfigClass *klass)
+                                       "share", "mypaint-data",
+                                       "1.0", "brushes", NULL);
+ #else
+-  mypaint_brushes = g_strdup (MYPAINT_BRUSHES_DIR);
++  mypaint_brushes = g_strdup (QUOTE(MYPAINT_BRUSHES_DIR));
+ #endif
+ 
+   path = g_build_path (G_SEARCHPATH_SEPARATOR_S,
+diff --git app/core/gimpdata.c app/core/gimpdata.c
+index e4640f3..c0fd90e 100644
+--- app/core/gimpdata.c
++++ app/core/gimpdata.c
+@@ -35,6 +35,9 @@
+ 
+ #include "gimp-intl.h"
+ 
++#define _QUOTE(x) #x
++#define QUOTE(x) _QUOTE(x)
++
+ 
+ enum
+ {
+@@ -457,10 +460,10 @@ gimp_data_get_identifier (GimpTagged *tagged)
+           identifier = g_filename_to_utf8 (tmp, -1, NULL, NULL, NULL);
+           g_free (tmp);
+         }
+-      else if (g_str_has_prefix (path, MYPAINT_BRUSHES_DIR))
++      else if (g_str_has_prefix (path, QUOTE(MYPAINT_BRUSHES_DIR)))
+         {
+           tmp = g_strconcat ("${mypaint_brushes_dir}",
+-                             path + strlen (MYPAINT_BRUSHES_DIR),
++                             path + strlen (QUOTE(MYPAINT_BRUSHES_DIR)),
+                              NULL);
+           identifier = g_filename_to_utf8 (tmp, -1, NULL, NULL, NULL);
+           g_free (tmp);
