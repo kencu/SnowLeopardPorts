@@ -67,7 +67,7 @@ depends_lib         port:desktop-file-utils \
                     port:curl \
                     port:libwmf \
                     port:libmypaint \
-                    port:mypaint-brushes \
+                    port:mypaint-brushes1 \
                     port:lcms2 \
                     port:dbus-glib \
                     port:libxml2 \
