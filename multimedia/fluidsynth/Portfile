@@ -41,7 +41,7 @@ depends_lib         port:flac \
                     port:readline
 
 depends_run-append  port:generaluser-soundfont
-
+use_parallel_build no
 # https://trac.macports.org/ticket/36962
 platform darwin 8 {
     patchfiles-append \
