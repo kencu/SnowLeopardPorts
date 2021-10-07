@@ -9,7 +9,7 @@ version                 0.9.23
 categories              games
 platforms               darwin
 license                 GPL-2
-maintainers             {kencu @kencu} openmaintainer
+maintainers             nomaintainer
 
 description             Funny turn-based artillery game, featuring fighting Hedgehogs!
 long_description        ${description}
